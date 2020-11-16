@@ -26,7 +26,6 @@ import copy
 
 from lmfit import Parameters, report_fit
 import lmfit
-import pybroom
 import collections
 import itertools
 import openpyxl
