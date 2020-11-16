@@ -18,3 +18,6 @@ application_folder
 ├───friction_raw_data
 └───friction_raw_data_bin
 ```
+
+As of the time of this writing the program is not compiled into a single .exe and is made up of multiple .py scripts. 
+To run the program, the user should type 'python app.py' in the terminal, launching a GUI which facilities process.
