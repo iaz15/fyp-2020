@@ -1,0 +1,92 @@
+{
+    "method": "leastsq",
+    "num_datapoints": 287,
+    "function_evaluations": 127,
+    "datetime": "16/11/2020, 19:24:57",
+    "statistics": {
+        "aic": -898.7004163081747,
+        "bic": -851.1271475032996,
+        "chisqr": 11.444732101914699,
+        "sum_residuals_squared": 11.444732101914699
+    },
+    "parameters": {
+        "D_1": {
+            "initial_value": 26692.6328125,
+            "final_value": 26692.6328125,
+            "min": 15000.0,
+            "max": 30000.0
+        },
+        "K_1": {
+            "initial_value": 10736.0693359375,
+            "final_value": 10736.0693359375,
+            "min": 1000.0,
+            "max": 20000
+        },
+        "Q_K_1": {
+            "initial_value": 74052.4765625,
+            "final_value": 74052.4765625,
+            "min": 70000,
+            "max": 80000
+        },
+        "Q_alpha_1": {
+            "initial_value": 49849.3359375,
+            "final_value": 49849.3359375,
+            "min": 40000,
+            "max": 80000
+        },
+        "k_1_1": {
+            "initial_value": 0.8012896776199341,
+            "final_value": 0.8012896776199342,
+            "min": 0.1,
+            "max": 4.0
+        },
+        "k_2_1": {
+            "initial_value": 2.0703749656677246,
+            "final_value": 2.0703749656677246,
+            "min": 0.2,
+            "max": 10.0
+        },
+        "k_3_1": {
+            "initial_value": 2.8141801357269287,
+            "final_value": 2.8141801357269283,
+            "min": 0.2,
+            "max": 10.0
+        },
+        "k_4_1": {
+            "initial_value": 1.3961772918701172,
+            "final_value": 1.3961772918701172,
+            "min": 0.5,
+            "max": 10.0
+        },
+        "k_5_1": {
+            "initial_value": 1.857969045639038,
+            "final_value": 1.857969045639038,
+            "min": 0.001,
+            "max": 10.0
+        },
+        "lambda_1_1": {
+            "initial_value": 25.159588405156885,
+            "final_value": 25.1595884051569,
+            "min": 1,
+            "max": 500
+        },
+        "lambda_2_1": {
+            "initial_value": 0.8026960492134094,
+            "final_value": 0.8026960492134093,
+            "min": 0.5,
+            "max": 4.0
+        },
+        "c_1": {
+            "initial_value": 0.013079927302896976,
+            "final_value": 0.014496468860675333,
+            "min": 0.0001,
+            "max": 10
+        },
+        "k_alpha_1": {
+            "initial_value": 1.0067495107650757,
+            "final_value": 1.006749510765076,
+            "min": 0.01,
+            "max": 10.0
+        }
+    }
+}
