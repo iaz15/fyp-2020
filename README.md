@@ -10,9 +10,11 @@ It does 4 different things:
 4. Once all the necessary data has been collected and averaged, the user will proceed to fit the interactive friction model to the data. Before this step, the user will have to input the initial guesses for the model constants and all the values for the relevant lubricant properties in the database. The user will select the test conditions to be used and the program will automatically extract and plot the model predictions along with the data in a window. The 6 different model parameters will be changed by user through sliders until a suitable fit has been obtained. This can then be saved to the database by clicking the save button. The fit then can then be automatically refined through the use of an inbuilt optimisation algorithm.
 
 The application relies on the following folder structure:
+```bash
 application_folder
 ├───application.exe
 ├───friction_averaged_results
 ├───friction_processed_results
 ├───friction_raw_data
 └───friction_raw_data_bin
+```
