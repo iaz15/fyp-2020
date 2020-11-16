@@ -948,36 +948,42 @@ def optimisation_friction_model(group_id_chosen=1):
 
     ### SAMPLE TESTING DATA
     # cof_measured_set, time_measured_set, sd_measured_set, testing_parameters_set = load_sample_data_opt()
-
+    print('###############################')
     # You need to convert to time and coefficient of friction data before processing.
     # You only need the first item in the list as the parameters will be the same for al of them.
     paras_solved1 = optimise_friction_results(testing_parameters_set, sd_measured_set, cof_measured_set, plot_results=True, time_input=False)
     lubricant_id = paras_solved1[0]['lubricant_id']
     lubricant_name = paras_solved1[0]['name']
 
-    while True:
-        print()
-        print("Do you want to overwrite the old parameter values? (Y/N)")
-        print(f"Lubricant ID: {lubricant_id}, Lubricant Name: {lubricant_name}")
+    # Using the GUI version, it will just print the optimised parameters
+    variable_params = ['lambda_1', 'lambda_2', 'c', 'k_1', 'k_2', 'k_3']
+    dictionary_parameters = {k:v for (k, v) in paras_solved1[0].items() if k in variable_params}
+    print(dictionary_parameters)
 
-        choice = input()
+    # # This section will not work when using the GUI version due to the event loop
+    # while True:
+    #     print()
+    #     print("Do you want to overwrite the old parameter values? (Y/N)")
+    #     print(f"Lubricant ID: {lubricant_id}, Lubricant Name: {lubricant_name}")
 
-        if choice.upper() == 'Y':
-            print("Overwriting old parameters")
-            lubricant_id = paras_solved1[0]['lubricant_id']
+    #     choice = input()
 
-            # Variable parameters
-            variable_params = ['lambda_1', 'lambda_2', 'c', 'k_1', 'k_2', 'k_3']
+    #     if choice.upper() == 'Y':
+    #         print("Overwriting old parameters")
+    #         lubricant_id = paras_solved1[0]['lubricant_id']
 
-            dictionary_parameters = {k:v for (k, v) in paras_solved1[0].items() if k in variable_params}
-            print(dictionary_parameters)
+    #         # Variable parameters
+    #         variable_params = ['lambda_1', 'lambda_2', 'c', 'k_1', 'k_2', 'k_3']
 
-        elif choice.upper() == 'N':
-            print("Leaving parameters unchanged")
-            break
+    #         dictionary_parameters = {k:v for (k, v) in paras_solved1[0].items() if k in variable_params}
+    #         print(dictionary_parameters)
 
-        else:
-            continue
+    #     elif choice.upper() == 'N':
+    #         print("Leaving parameters unchanged")
+    #         break
+
+    #     else:
+    #         continue
 
 
 def solve_all_changing_parameters(paras, plot_results=False):
