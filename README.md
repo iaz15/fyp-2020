@@ -1,6 +1,9 @@
 # README
+This repository contains the public versions of projects worked on by this user at Imperial College. This project was developed using Python version 3.7.6.
 
-A desktop application to facilitate experiements in the metal forming group at Imperial. The following text describes how the original version (In the ams_submitted folder) works.
+## AMS (Autonomous Modelling System) version 1
+A desktop application to facilitate experiments in the metal forming group at Imperial. 
+The following text describes how the original version (In the ams_submitted folder) works.
 
 It does 4 different things:
 
@@ -20,4 +23,19 @@ application_folder
 ```
 
 As of the time of this writing the program is not compiled into a single .exe and is made up of multiple .py scripts. 
-To run the program, the user should type 'python app.py' in the terminal, launching a GUI which facilities the whole process from start to finish.
+To run the program, the user should run 'python app.py' in the terminal. This launching a GUI version of the application.
+
+## AMS (Autonomous Modelling System) version 2
+The project was improved on in the following summer. The requirements had changed and the currently uploaded version is a work in progress.
+
+The graphical user interface was overhauled and multiple quality of life improvements were made to the process with the removal of the need to label the input files being one of them. Instead, the user can label the test conditions of each experimental result through the graphical user interface provided.
+It was made easier to cycle through the 
+Averaging the data was 
+
+To run this version of the program, the user should run 'python app.py' in the terminal. This launching a GUI version of the application.
+
+## Model fitter
+A desktop application to facilitate experiments in the metal forming group at Imperial. 
+The following text describes how the model fitter (In the model_fitter folder) works.
+
+To run this program, the use should run 'python fitting.py' in the terminal
