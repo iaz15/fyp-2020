@@ -20,4 +20,4 @@ application_folder
 ```
 
 As of the time of this writing the program is not compiled into a single .exe and is made up of multiple .py scripts. 
-To run the program, the user should type 'python app.py' in the terminal, launching a GUI which facilities process.
+To run the program, the user should type 'python app.py' in the terminal, launching a GUI which facilities the whole process from start to finish.
