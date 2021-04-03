@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 from scipy.integrate import odeint
 from lmfit import minimize, Parameters, Parameter, report_fit
-from sklearn.linear_model import LinearRegression
 import scipy.io
 import lmfit
 from scipy.io import loadmat
