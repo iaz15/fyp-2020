@@ -33,7 +33,7 @@ spec_variable_experimental_conditions = [
     ('equiv_solid_thickness', float32)
 ]
 
-@jitclass(spec_variable_experimental_conditions)
+# @jitclass(spec_variable_experimental_conditions)
 class VariableExperimentalConditions:
     def __init__(self, temperature, force, pressure, speed, lubricant_thickness=0, equiv_solid_thickness=0):
         self.temperature = temperature
@@ -52,7 +52,7 @@ spec_lubricant = [
     ('avg_hardness_solid', float32),
 ]
 
-@jitclass(spec_lubricant)
+# @jitclass(spec_lubricant)
 class Lubricant():
 
     def __init__(self, id, name, includes_liquid, includes_solid, density_liquid=0, avg_hardness_solid=0):
@@ -80,19 +80,19 @@ class Lubricant():
             # Average Hardness Units: GPa
             self.avg_hardness_solid = avg_hardness_solid
 
-spec_static_experimental_conditions = [
-    ('lubricant', Lubricant.class_type.instance_type),
-    ('pin_material', numba.types.string),
-    ('pin_roughness', float32),
-    ('blank_material', numba.types.string),
-    ('blank_roughness', float32),
-    ('blank_thickness', float32),
-    ('coating_material', numba.types.string),
-    ('coating_thickness', float32),
-    ('coating_roughness', float32)
-]
+# spec_static_experimental_conditions = [
+#     ('lubricant', Lubricant.class_type.instance_type),
+#     ('pin_material', numba.types.string),
+#     ('pin_roughness', float32),
+#     ('blank_material', numba.types.string),
+#     ('blank_roughness', float32),
+#     ('blank_thickness', float32),
+#     ('coating_material', numba.types.string),
+#     ('coating_thickness', float32),
+#     ('coating_roughness', float32)
+# ]
 
-@jitclass(spec_static_experimental_conditions)
+# @jitclass(spec_static_experimental_conditions)
 class StaticExperimentalConditions:
 
     def __init__(self, lubricant, pin_material, pin_roughness, blank_material,
@@ -179,7 +179,7 @@ spec_friction_model_parameters_liquid = [
     ('k_3', float32),
 ]
 
-@jitclass(spec_friction_model_parameters_liquid)
+# @jitclass(spec_friction_model_parameters_liquid)
 class FrictionModelParametersLiquid():
 
     def __init__(self, mu0_lubricated, Q_lubricated, mu0_dry, Q_dry, eta_0, Q_eta,
@@ -215,7 +215,7 @@ spec_friction_model_parameters_liquid_solid = [
     ('Q_K', float32),
 ]
 
-@jitclass(spec_friction_model_parameters_liquid_solid)
+# @jitclass(spec_friction_model_parameters_liquid_solid)
 class FrictionModelParametersLiquidSolid():
 
     def __init__(self, lambda_1, lambda_2, c, k_1, k_2, k_3, k_4, k_5, D, k_alpha, Q_alpha, K, Q_K) -> None:
@@ -383,17 +383,17 @@ class FrictionModelLiquid():
         """
         return temperature + 273.1
 
-spec = [
-    ('static_conditions', StaticExperimentalConditions.class_type.instance_type),
-    ('parameters', FrictionModelParametersLiquidSolid.class_type.instance_type),
-    ('model_name', numba.types.string),
-    ('time_input', boolean),
-    ('dt', float32),
-    ('R', float32),
-    ('coating_roughness', float32)
-]
+# spec = [
+#     ('static_conditions', StaticExperimentalConditions.class_type.instance_type),
+#     ('parameters', FrictionModelParametersLiquidSolid.class_type.instance_type),
+#     ('model_name', numba.types.string),
+#     ('time_input', boolean),
+#     ('dt', float32),
+#     ('R', float32),
+#     ('coating_roughness', float32)
+# ]
 
-@jitclass(spec)
+# @jitclass(spec)
 class FrictionModelLiquidSolid():
     """
     The FrictionModel2 object
