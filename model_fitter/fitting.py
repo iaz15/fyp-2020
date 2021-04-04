@@ -223,8 +223,8 @@ class Fitter():
 
             # TODO: Remember the model prediction function should be general, therefore it should just be 'predict'
             current_colour = next(colours)
-            l, = plt.plot(prediction_range, self.model.predict(prediction_range,
-                **ordered_dict), label=textstr, color=current_colour)
+
+            l, = plt.plot(prediction_range, self.model.predict(prediction_range, **ordered_dict), label=textstr, color=current_colour)
             plt.plot(dataset.x_data, dataset.y_data, linestyle="--", color=current_colour)
 
             self.variable_conditions_names_values.append(ordered_dict)
@@ -694,16 +694,16 @@ def fit_liquid():
     ### Manual fitting
     friction_liquid_model_fitter_1.manual_fitting(x[0])
 
-    ### Automatic fitting
-    out = friction_liquid_model_fitter_1.automatic_fit()
-    report_fit(out.params)
+    # ### Automatic fitting
+    # out = friction_liquid_model_fitter_1.automatic_fit()
+    # report_fit(out.params)
 
-    ### Plot the results
-    plt.figure()
-    for i in range(len(friction_liquid_model_fitter_1.datasets)):
-        y_fit = friction_liquid_model_fitter_1.compute_y(out.params, i, x[i])
-        plt.plot(x[i], data[i], 'o', x[i], y_fit, '-')
-    plt.show()
+    # ### Plot the results
+    # plt.figure()
+    # for i in range(len(friction_liquid_model_fitter_1.datasets)):
+    #     y_fit = friction_liquid_model_fitter_1.compute_y(out.params, i, x[i])
+    #     plt.plot(x[i], data[i], 'o', x[i], y_fit, '-')
+    # plt.show()
 
 def fit_liquid_solid():
     ### NOTE: CHOOSE THE EXPERIMENTS YOU WANT FROM HERE
@@ -783,48 +783,48 @@ def fit_liquid_solid():
     friction_liquid_solid_fitter.fit_params.add('delta', value=10, min=5, max=20)
     friction_liquid_solid_fitter.fit_params['lambda_1_1'].expr = 'delta ** (1.0 / lambda_2_1) / blank_roughness'
 
-    # ### Manual fitting - Will only work without usage of the numba library
-    # friction_l_s_model_fitter.manual_fitting(np.linspace(0,100,100))
+    ### Manual fitting - Will only work without usage of the numba library
+    friction_liquid_solid_fitter.manual_fitting(np.linspace(0,100,100))
 
-    ### Automatic fitting - Pick the type of optimisation method in the function
-    tnc = dict(method='tnc', maxiter=10)
-    dual_annealing = dict(method='dual_annealing', max_nfev=10)
-    basinhopping = dict(method='basinhopping', niter=2, disp=True)
-    differential_evolution = dict(method='differential_evolution', max_nfev=100000, disp=True)
-    leastsq = dict(method='leastsq', maxfev=10000)
+    # ### Automatic fitting - Pick the type of optimisation method in the function
+    # tnc = dict(method='tnc', maxiter=10)
+    # dual_annealing = dict(method='dual_annealing', max_nfev=10)
+    # basinhopping = dict(method='basinhopping', niter=2, disp=True)
+    # differential_evolution = dict(method='differential_evolution', max_nfev=100000, disp=True)
+    # leastsq = dict(method='leastsq', maxfev=10000)
 
-    # These new parameters will overwrite the previous new condition.
-    # It will not revert to the original parameters before setting the new conditions.
-    # Example: If you change lambda 1 in the first new condition and only change
-    # lambda 2 in the second new condition, both lambda 1 and lambda 2 will be different
-    # from the original version.
+    # # These new parameters will overwrite the previous new condition.
+    # # It will not revert to the original parameters before setting the new conditions.
+    # # Example: If you change lambda 1 in the first new condition and only change
+    # # lambda 2 in the second new condition, both lambda 1 and lambda 2 will be different
+    # # from the original version.
 
-    # Start at 0, the original parameters unchanged
-    # If initialise values are out of the ranges set initially, they will be brough back down
-    # It isn't possible to deepcopy a jitted class at the moment
-    # Always define new_values[0] as an empty dict
-    new_values = {}
-    new_values[0] = dict()
-    # new_values[1] = dict(lambda_1=5)
-    # new_values[2] = dict(lambda_1=10, c=5, k_2=2)
-    # new_values[3] = dict(lambda_1=100, c=8, k_2=2, k_3=2)
-    # new_values[4] = dict(lambda_1=900, c=9, k_2=2, k_3=1, k_4=2)
+    # # Start at 0, the original parameters unchanged
+    # # If initialise values are out of the ranges set initially, they will be brough back down
+    # # It isn't possible to deepcopy a jitted class at the moment
+    # # Always define new_values[0] as an empty dict
+    # new_values = {}
+    # new_values[0] = dict()
+    # # new_values[1] = dict(lambda_1=5)
+    # # new_values[2] = dict(lambda_1=10, c=5, k_2=2)
+    # # new_values[3] = dict(lambda_1=100, c=8, k_2=2, k_3=2)
+    # # new_values[4] = dict(lambda_1=900, c=9, k_2=2, k_3=1, k_4=2)
 
-    results_list = []
+    # results_list = []
 
-    # Run minimise of any variant combinations of parameters
-    for key, parameter_dict in new_values.items():
-        print(f"Run {key}")
-        for parameter, value in parameter_dict.items():
-            friction_liquid_solid_fitter.fit_params[f'{parameter}_1'].set(value=value)
+    # # Run minimise of any variant combinations of parameters
+    # for key, parameter_dict in new_values.items():
+    #     print(f"Run {key}")
+    #     for parameter, value in parameter_dict.items():
+    #         friction_liquid_solid_fitter.fit_params[f'{parameter}_1'].set(value=value)
 
-        result = friction_liquid_solid_fitter.automatic_fit(
-            minimizer_kwargs=leastsq,
-            save_results=True,
-            show_plots=True
-        )
+    #     result = friction_liquid_solid_fitter.automatic_fit(
+    #         minimizer_kwargs=leastsq,
+    #         save_results=True,
+    #         show_plots=True
+    #     )
 
-        results_list.append(result)
+    #     results_list.append(result)
 
 def extract_workbook_data_liquid_solid_friction(workbook_name):
     # https://realpython.com/openpyxl-excel-spreadsheets-python/
