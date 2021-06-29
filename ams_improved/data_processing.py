@@ -487,9 +487,14 @@ def extract_cof_results(matching_files, dfs_dictionary):
         df['sliding_distance_(mm)'] = df['delta_x_(mm)'].cumsum()
 
         # Always remove these columns
-        df.drop(['time_(s)_x', 'time_(s)_y', 'delta_t_(s)',\
-                 'delta_x_(mm)'], axis=1, inplace=True)
+        df.drop(['delta_t_(s)',\
+                 'delta_x_(mm)', 'delta_t_(s)_x',
+                 'y_position_(mm)', 'z_position_(mm)', 'delta_t_(s)_y',
+                 'delta_x_(m)', 'delta_y_(m)', 'speed_y_(mm_s^-1)',
+                 'delta_z_(m)', 'speed_z_(mm_s^-1)'], axis=1, inplace=True)
 
+        # Remove the first row that has empty cells (and any other ones)
+        df.dropna(inplace=True)
 
         dfs_output[exp_id] = df
 
