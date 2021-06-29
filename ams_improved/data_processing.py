@@ -486,13 +486,6 @@ def extract_cof_results(matching_files, dfs_dictionary):
         df['delta_x_(mm)'] = df['speed_x_(mm_s^-1)'].multiply(df['delta_t_(s)'], axis='index')
         df['sliding_distance_(mm)'] = df['delta_x_(mm)'].cumsum()
 
-        # reorder the columns to make cof and sd next to each other
-        columns = list(df.columns)
-        columns.remove('coefficient_of_friction')
-        columns.append('coefficient_of_friction')
-
-        df = df.loc[:, columns]
-
         # Always remove these columns
         df.drop(['delta_t_(s)',\
                  'delta_x_(mm)'], axis=1, inplace=True)
