@@ -591,6 +591,16 @@ def main():
     startup_text = "Processing Files for Interactive Friction Model."
     print(startup_text)
 
+    # Initialisation for testing
+    source1 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\hidden\force_data_1.csv"
+    source2 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\hidden\position_data_1.csv"
+
+    destination1 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\force_data_1.csv"
+    destination2 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\position_data_1.csv"
+
+    shutil.copy(source1, destination1)
+    shutil.copy(source2, destination2)
+
     ################## Step 1 - Check if the required folders exist ##################
 
     print("="*len(startup_text))
