@@ -370,7 +370,10 @@ def average_data(condition_id, plot_results=True, print_experiments=False):
         condition_id = df.condition_id.iloc[0]
 
         # save result to averaged folder
-        averaged_filename = f'C{condition_id}_averaged.csv'
+        experiment_num_list = df['experiment_id'].to_list()
+        experiment_num_string = '_'.join([str(num) for num in experiment_num_list])
+
+        averaged_filename = f'C{condition_id}_{experiment_num_string}_averaged.csv'
 
         df_averaged_data.to_csv(os.path.join(averaged_folder, averaged_filename), sep=',', index=False)
 
