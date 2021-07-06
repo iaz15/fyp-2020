@@ -23,42 +23,42 @@ def get_filename_metadata(filename):
 # user fills in form
 # user clicks save -> initialise the class
 class Experiment:
-    def __init__(self, experiment_id, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
-                 coating_material, coating_thickness, coating_roughness,
-                 temperature, speed, force, pressure, lubricant_thickness):
+    def __init__(self, experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers):
         self.id = experiment_id
 
-        self.conditions = ExperimentalConditions(lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
-                                                 coating_material, coating_thickness, coating_roughness,
-                                                 temperature, speed, force, pressure, lubricant_thickness)
+        self.conditions = ExperimentalConditions(lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                                                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                                                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers)
 
     def add_output_filename(self, filename):
         self.filename = filename
 
 class ExperimentalConditions:
-    def __init__(self, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
-                 coating_material, coating_thickness, coating_roughness,
-                 temperature, speed, force, pressure, lubricant_thickness, equiv_solid_thickness=None):
+    def __init__(self, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers, equiv_solid_thickness_micrometers=None):
 
         self.lubricant = lubricant
 
         self.pin_material = pin_material
-        self.pin_roughness = pin_roughness
+        self.pin_roughness_Ra = pin_roughness_Ra
 
         self.blank_material = blank_material
-        self.blank_roughness = blank_roughness
-        self.blank_thickness = blank_thickness
+        self.blank_roughness_Ra = blank_roughness_Ra
+        self.blank_thickness_mm = blank_thickness_mm
 
         self.coating_material = coating_material
-        self.coating_thickness = coating_thickness
-        self.coating_roughness = coating_roughness
+        self.coating_thickness_mm = coating_thickness_mm
+        self.coating_roughness_Ra = coating_roughness_Ra
 
-        self.temperature = temperature
-        self.force = force
-        self.pressure = pressure
-        self.speed = speed
-        self.lubricant_thickness = lubricant_thickness
-        self.equiv_solid_thickness = equiv_solid_thickness
+        self.temperature_degC = temperature_degC
+        self.force_N = force_N
+        self.pressure_MPa = pressure_MPa
+        self.speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers = speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers
+        self.lubricant_thickness_micrometers = lubricant_thickness_micrometers
+        self.equiv_solid_thickness_micrometers = equiv_solid_thickness_micrometers
 
 def get_filenames(directory):
     return os.listdir(directory)
@@ -106,49 +106,49 @@ def validate_filenames(filenames):
 
     return invalid_filenames, paired_filenames
 
-def create_experiment(experiment_id, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
-                                coating_material, coating_roughness, coating_thickness,
-                                temperature, speed, force, pressure, lubricant_thickness):
+def create_experiment(experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                                coating_material, coating_roughness_Ra, coating_thickness_mm,
+                                temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers):
 
-    experiment = Experiment(experiment_id, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
-                                coating_material, coating_roughness, coating_thickness,
-                                temperature, speed, force, pressure, lubricant_thickness)
+    experiment = Experiment(experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                                coating_material, coating_roughness_Ra, coating_thickness_mm,
+                                temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers)
     return experiment
 
 # todo: placeholder for ui event handling
 def populate_experiment(experiment_id=1):
     # user will pass in:
-    # lubricant, pin_material, pin_roughness, blank_material, blank_roughness,
-    # temperature, force, speed, lubricant_thickness
+    # lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra,
+    # temperature_degC, force_N, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers, lubricant_thickness_micrometers
 
     # this information will be stored in a list
     experiment_ids = [7, 9]
 
     lubricants = ['Omega 35', 'Omega 35']
     pin_material = ['P20', 'P20']
-    pin_roughness = [0.4, 0.4]
+    pin_roughness_Ra = [0.4, 0.4]
     blank_material = ['AA7075', 'AA7075']
-    blank_roughness = [0.9, 0.9]
+    blank_roughness_Ra = [0.9, 0.9]
 
-    blank_thickness = [2, 2]
+    blank_thickness_mm = [2, 2]
     coating_material = ['AA7075', 'AA7075']
-    coating_thickness = [0.8, 0.8]
-    coating_roughness = [0.7, 0.7]
+    coating_thickness_mm = [0.8, 0.8]
+    coating_roughness_Ra = [0.7, 0.7]
 
-    temperature = [400, 450]
-    force = [8, 8]
-    speed = [100, 100]
-    lubricant_thickness = [10, 10]
+    temperature_degC = [400, 450]
+    force_N = [8, 8]
+    speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers = [100, 100]
+    lubricant_thickness_micrometers = [10, 10]
 
     if experiment_id==1:
-        experiment = Experiment(experiment_ids[0], lubricants[0], pin_material[0], pin_roughness[0], blank_material[0], blank_roughness[0], blank_thickness[0],
-        coating_material[0], coating_thickness[0], coating_roughness[0],
-        temperature[0], force[0], speed[0], lubricant_thickness[0])
+        experiment = Experiment(experiment_ids[0], lubricants[0], pin_material[0], pin_roughness_Ra[0], blank_material[0], blank_roughness_Ra[0], blank_thickness_mm[0],
+        coating_material[0], coating_thickness_mm[0], coating_roughness_Ra[0],
+        temperature_degC[0], force_N[0], speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers[0], lubricant_thickness_micrometers[0])
 
     elif experiment_id==2:
-        experiment = Experiment(experiment_ids[1], lubricants[1], pin_material[1], pin_roughness[1], blank_material[1], blank_roughness[1], blank_thickness[1],
-        coating_material[1], coating_thickness[1], coating_roughness[1],
-        temperature[1], force[1], speed[1], lubricant_thickness[1])
+        experiment = Experiment(experiment_ids[1], lubricants[1], pin_material[1], pin_roughness_Ra[1], blank_material[1], blank_roughness_Ra[1], blank_thickness_mm[1],
+        coating_material[1], coating_thickness_mm[1], coating_roughness_Ra[1],
+        temperature_degC[1], force_N[1], speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers[1], lubricant_thickness_micrometers[1])
 
     else:
         return None
@@ -163,8 +163,8 @@ def rename_files_(directory, experiments):
 
     for key, exp_object in experiments.items():
         print(key)
-        print(exp_object.conditions.temperature)
-        print(exp_object.conditions.coating_thickness)
+        print(exp_object.conditions.temperature_degC)
+        print(exp_object.conditions.coating_thickness_mm)
 
     return None
 
