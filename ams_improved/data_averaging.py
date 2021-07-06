@@ -57,10 +57,13 @@ def average_datasets(experimental_datasets, exp_numbers=None, trim_resample=True
 
     # For each of them, make 'time_elapsed_(s)' the index before merging.
     for experimental_dataset in experimental_datasets:
+        # There may be duplicates time_elapsed_(s) for some reason. These need to be removed for concatenation
+        #   This has been taken care of at an earlier stage in data processing
         experimental_dataset.set_index('time_elapsed_(s)', inplace=True)
 
     # Merge the data, then interpolate in between.
     # Drop null values (Typically at the ends)
+    # https://stackoverflow.com/questions/35084071/concat-dataframe-reindexing-only-valid-with-uniquely-valued-index-objects
     merged_data = pd.concat(experimental_datasets, join='outer', axis=1).interpolate().dropna()
 
     # Calculate standard deviations for envelops
