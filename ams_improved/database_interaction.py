@@ -149,8 +149,11 @@ def insert_example_lubricants():
     lubricants = sqlalchemy.Table('lubricants', metadata, autoload=True, autoload_with=engine)
 
     values_list = [
-        {'lubricant_id': 1, 'name': 'Omega 35'},
-        {'lubricant_id': 2, 'name': 'ZEPF'}
+        {'name': 'F555'},
+        {'name': 'F556'},
+        {'name': 'F557'},
+        {'name': 'F420N'},
+        {'name': 'F605N'}
     ]
 
     stmt = insert(lubricants)
@@ -174,9 +177,36 @@ def add_experiment_database(experiment):
 
     # Add to experiment values into the right columns and tables
 
-    ### First determine group_id & insert row as necessary
+    ### First check that the lubricant exists, if not add it.
+    # Then set the lubricant id
+    query = select([lubricants.c.lubricant_id])\
+                    .where(getattr(lubricants.c, 'name') == getattr(experiment.conditions, 'lubricant'))
+    result_proxy = con.execute(query)
+    matching_lubricant_id = result_proxy.scalar()
+
+    if matching_lubricant_id:
+        # Set the lubricant id to the one existing in the db
+        experiment_lubricant_id = matching_lubricant_id
+    else:
+        # Otherwise no matching group number then add a new lubricant
+        # Otherwise insert as a new row
+        query = select([func.max(lubricants.c.lubricant_id)])
+        result_proxy = con.execute(query)
+        max_lubricant_id = result_proxy.scalar()
+
+        if max_lubricant_id is None:
+            max_lubricant_id = 0
+
+        experiment_lubricant_id = max_lubricant_id + 1
+
+        insert_stmt = insert(lubricants).\
+                        values(lubricant_id=experiment_lubricant_id, name=getattr(experiment.conditions, 'lubricant'))
+
+        results = con.execute(insert_stmt)
+
+    ### Then determine group_id & insert row as necessary
     query = select([condition_groups.c.group_id])\
-                    .where(getattr(condition_groups.c, 'lubricant_id') == getattr(experiment.conditions, 'lubricant_id'))\
+                    .where(getattr(condition_groups.c, 'lubricant_id') == experiment_lubricant_id)\
                     .where(getattr(condition_groups.c, 'blank_material') == getattr(experiment.conditions, 'blank_material'))\
                     .where(getattr(condition_groups.c, 'blank_roughness') == getattr(experiment.conditions, 'blank_roughness'))\
                     .where(getattr(condition_groups.c, 'blank_material') == getattr(experiment.conditions, 'blank_material'))\
@@ -187,25 +217,25 @@ def add_experiment_database(experiment):
                     .where(getattr(condition_groups.c, 'coating_thickness') == getattr(experiment.conditions, 'coating_thickness'))
 
     # There should only 1 matching group_id maximum
-    result_proxy  = con.execute(query)
+    result_proxy = con.execute(query)
     matching_group_num = result_proxy.scalar()
 
     if matching_group_num:
         # If there is an existing match set group_id to that
-        experiment.set_group_id(matching_group_num)
+        experiment_group_id = matching_group_num
     else:
         # Otherwise insert as a new row
         query = select([func.max(condition_groups.c.group_id)])
-        result_proxy  = con.execute(query)
+        result_proxy = con.execute(query)
         max_group_id = result_proxy.scalar()
 
         if max_group_id is None:
             max_group_id = 0
 
-        experiment.set_group_id(max_group_id + 1)
+        experiment_group_id = max_group_id + 1
 
         insert_stmt = insert(condition_groups).\
-                        values(lubricant_id=experiment.conditions.lubricant_id, blank_material=experiment.conditions.blank_material,\
+                        values(lubricant_id=experiment_lubricant_id, blank_material=experiment.conditions.blank_material,\
                                 blank_roughness=experiment.conditions.blank_roughness, blank_thickness=experiment.conditions.blank_thickness,\
                                 pin_material=experiment.conditions.pin_material, pin_roughness=experiment.conditions.pin_roughness,\
                                 coating_material=experiment.conditions.coating_material, coating_roughness=experiment.conditions.coating_roughness,\
@@ -214,50 +244,53 @@ def add_experiment_database(experiment):
         results = con.execute(insert_stmt)
 
     ### Then determine condition_id & insert row as necessary
+    # There may be unused columns like equiv_solid_thickness
+    # NULL (where a value is not input) is equivalent to None in Python
     query = select([conditions.c.condition_id])\
-                .where(conditions.c.group_id == experiment.group_id)\
+                .where(conditions.c.group_id == experiment_group_id)\
                 .where(conditions.c.temperature == experiment.conditions.temperature)\
                 .where(conditions.c.speed == experiment.conditions.speed)\
                 .where(conditions.c.force == experiment.conditions.force)\
                 .where(conditions.c.pressure == experiment.conditions.pressure)\
                 .where(conditions.c.lubricant_thickness == experiment.conditions.lubricant_thickness)\
+                .where(conditions.c.equiv_solid_thickness == experiment.conditions.equiv_solid_thickness)
+
+    # equiv_solid_thickness will not be there for liquid only lubricants
 
     # There should only 1 matching condition_id maximum
-    result_proxy  = con.execute(query)
+    result_proxy = con.execute(query)
     matching_condition_num = result_proxy.scalar()
 
     if matching_condition_num:
         # If there is an existing match set condition_id to that
-        experiment.set_condition_id(matching_condition_num)
+        experiment_condition_id = matching_condition_num
     else:
         # Otherwise insert as a new row
         query = select([func.max(conditions.c.condition_id)])
-        result_proxy  = con.execute(query)
+        result_proxy = con.execute(query)
         max_condition_id = result_proxy.scalar()
 
         if max_condition_id is None:
             max_condition_id = 0
 
-        experiment.set_condition_id(max_condition_id + 1)
+        experiment_condition_id = max_condition_id + 1
 
         insert_stmt = insert(conditions).\
-                        values(group_id=experiment.group_id, temperature=experiment.conditions.temperature,
+                        values(group_id=experiment_group_id, temperature=experiment.conditions.temperature,
                             speed=experiment.conditions.speed, force=experiment.conditions.force,
                             pressure=experiment.conditions.pressure, lubricant_thickness=experiment.conditions.lubricant_thickness)
 
         results = con.execute(insert_stmt)
 
     ### Then add the results to experiments table & determine duplicate id as necessary
-    query = select([func.count(experiments.c.condition_id)]).where(experiments.c.condition_id == experiment.condition_id)
+    query = select([func.count(experiments.c.condition_id)]).where(experiments.c.condition_id == experiment_condition_id)
 
     duplicate_count  = con.execute(query).scalar()
 
-    experiment.set_duplicate_number(duplicate_count)
-
     insert_stmt = insert(experiments).\
-                    values(condition_id=experiment.condition_id,
+                    values(condition_id=experiment_condition_id,
                             filename=experiment.filename,
-                            duplicate=experiment.duplicate_number)
+                            duplicate=duplicate_count)
 
     results = con.execute(insert_stmt)
 
@@ -269,7 +302,7 @@ def initialise_new_database():
         # remove existing database
         os.remove('friction_model.db')
     except:
-        pass
+        raise Exception("failed to remove db")
 
     # create the database
     create_database()
@@ -295,16 +328,16 @@ def create_sample_datasets():
     # Example of objects the user will create. This will be stored in a dictionary before adding to the
     # database
     experiments_dict = {}
-    experiments_dict[1] = Experiment(1, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
-    experiments_dict[2] = Experiment(2, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
-    experiments_dict[3] = Experiment(3, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
-    experiments_dict[4] = Experiment(4, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
-    experiments_dict[5] = Experiment(5, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
-    experiments_dict[6] = Experiment(6, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
-    experiments_dict[7] = Experiment(7, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
-    experiments_dict[8] = Experiment(8, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
-    experiments_dict[9] = Experiment(9, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
-    experiments_dict[10] = Experiment(10, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 8, 50, 0.43, 25)
+    experiments_dict[1] = Experiment(1, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
+    experiments_dict[2] = Experiment(2, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
+    experiments_dict[3] = Experiment(3, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
+    experiments_dict[4] = Experiment(4, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
+    experiments_dict[5] = Experiment(5, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
+    experiments_dict[6] = Experiment(6, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
+    experiments_dict[7] = Experiment(7, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
+    experiments_dict[8] = Experiment(8, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
+    experiments_dict[9] = Experiment(9, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
+    experiments_dict[10] = Experiment(10, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 8, 50, 0.43, 25)
 
     experiments_dict[1].add_output_filename('1_output.csv')
     experiments_dict[2].add_output_filename('2_output.csv')
@@ -501,13 +534,13 @@ if __name__ == "__main__":
     ### 1. INITIALISE THE DATABASE WITH STARTING VALUES (Removes existing)
     initialise_new_database()
 
-    # ### 2. USER WILL WANT TO DO SOME DATA PROCESSING ON REPEATED FILES - Modify condition_id to see results
-    # # Use information in database and data in stored files to average the data accordingly
-    # # There are 4 conditions. Change the value to see the effect
-    # condition_id = 1
-    # average_data(1, plot_results=False, print_experiments=False)
-    # average_data(2, plot_results=False, print_experiments=False)
-    # average_data(3, plot_results=False, print_experiments=False)
+    ### 2. USER WILL WANT TO DO SOME DATA PROCESSING ON REPEATED FILES - Modify condition_id to see results
+    # Use information in database and data in stored files to average the data accordingly
+    # There are 4 conditions. Change the value to see the effect
+    condition_id = 1
+    average_data(1, plot_results=False, print_experiments=False)
+    average_data(2, plot_results=False, print_experiments=False)
+    average_data(3, plot_results=False, print_experiments=False)
 
 
     # ### 3. POPULATE THE PARAMETER COLUMNS WITH INITIAL ESTIMATES FOR THAT GROUP
