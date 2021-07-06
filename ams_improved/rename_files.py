@@ -25,12 +25,12 @@ def get_filename_metadata(filename):
 class Experiment:
     def __init__(self, experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
                  coating_material, coating_thickness_mm, coating_roughness_Ra,
-                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers):
+                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres):
         self.id = experiment_id
 
         self.conditions = ExperimentalConditions(lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
                                                  coating_material, coating_thickness_mm, coating_roughness_Ra,
-                                                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers)
+                                                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres)
 
     def add_output_filename(self, filename):
         self.filename = filename
@@ -38,7 +38,7 @@ class Experiment:
 class ExperimentalConditions:
     def __init__(self, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
                  coating_material, coating_thickness_mm, coating_roughness_Ra,
-                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers, equiv_solid_thickness_micrometers=None):
+                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres, equiv_solid_thickness_micrometres=None):
 
         self.lubricant = lubricant
 
@@ -56,9 +56,9 @@ class ExperimentalConditions:
         self.temperature_degC = temperature_degC
         self.force_N = force_N
         self.pressure_MPa = pressure_MPa
-        self.speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers = speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers
-        self.lubricant_thickness_micrometers = lubricant_thickness_micrometers
-        self.equiv_solid_thickness_micrometers = equiv_solid_thickness_micrometers
+        self.speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres = speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres
+        self.lubricant_thickness_micrometres = lubricant_thickness_micrometres
+        self.equiv_solid_thickness_micrometres = equiv_solid_thickness_micrometres
 
 def get_filenames(directory):
     return os.listdir(directory)
@@ -108,18 +108,18 @@ def validate_filenames(filenames):
 
 def create_experiment(experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
                                 coating_material, coating_roughness_Ra, coating_thickness_mm,
-                                temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers):
+                                temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres):
 
     experiment = Experiment(experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
                                 coating_material, coating_roughness_Ra, coating_thickness_mm,
-                                temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers)
+                                temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres)
     return experiment
 
 # todo: placeholder for ui event handling
 def populate_experiment(experiment_id=1):
     # user will pass in:
     # lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra,
-    # temperature_degC, force_N, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers, lubricant_thickness_micrometers
+    # temperature_degC, force_N, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres, lubricant_thickness_micrometres
 
     # this information will be stored in a list
     experiment_ids = [7, 9]
@@ -137,18 +137,18 @@ def populate_experiment(experiment_id=1):
 
     temperature_degC = [400, 450]
     force_N = [8, 8]
-    speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers = [100, 100]
-    lubricant_thickness_micrometers = [10, 10]
+    speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres = [100, 100]
+    lubricant_thickness_micrometres = [10, 10]
 
     if experiment_id==1:
         experiment = Experiment(experiment_ids[0], lubricants[0], pin_material[0], pin_roughness_Ra[0], blank_material[0], blank_roughness_Ra[0], blank_thickness_mm[0],
         coating_material[0], coating_thickness_mm[0], coating_roughness_Ra[0],
-        temperature_degC[0], force_N[0], speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers[0], lubricant_thickness_micrometers[0])
+        temperature_degC[0], force_N[0], speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres[0], lubricant_thickness_micrometres[0])
 
     elif experiment_id==2:
         experiment = Experiment(experiment_ids[1], lubricants[1], pin_material[1], pin_roughness_Ra[1], blank_material[1], blank_roughness_Ra[1], blank_thickness_mm[1],
         coating_material[1], coating_thickness_mm[1], coating_roughness_Ra[1],
-        temperature_degC[1], force_N[1], speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometers[1], lubricant_thickness_micrometers[1])
+        temperature_degC[1], force_N[1], speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres[1], lubricant_thickness_micrometres[1])
 
     else:
         return None

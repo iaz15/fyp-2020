@@ -53,8 +53,8 @@ def friction_coefficient_model(beta, paras):
     float
         The coefficient of friction, mu given the test conditions.
     """
-    mu_lubricated = arrhenius_solve_cof(paras['mu0_lubricated'], paras['Q_lubricated'], convert_to_kelvin(paras['temperature']))
-    mu_dry = arrhenius_solve_cof(paras['mu0_dry'], paras['Q_dry'], convert_to_kelvin(paras['temperature']))
+    mu_lubricated = arrhenius_solve_cof(paras['mu0_lubricated'], paras['Q_lubricated'], convert_to_kelvin(paras['temperature_degC']))
+    mu_dry = arrhenius_solve_cof(paras['mu0_dry'], paras['Q_dry'], convert_to_kelvin(paras['temperature_degC']))
 
     mu = (1 - beta)*mu_lubricated + beta*mu_dry
     return mu
@@ -124,10 +124,10 @@ def film_thickness_model(h, t, paras, idx=None, changing_inputs=None):
         k_2 = paras['k_2']
         k_3 = paras['k_3']
 
-        P = paras['pressure']
-        T = paras['temperature']
+        P = paras['pressure_MPa']
+        T = paras['temperature_degC']
 
-        v = paras['speed']
+        v = paras['speed_mmpersecond']
 
         eta_0 = paras['eta_0']
         Q_eta = paras['Q_eta']
@@ -150,7 +150,7 @@ def film_thickness_model(h, t, paras, idx=None, changing_inputs=None):
 
         # Velocity is always constant
         # v = float(paras['changing_values'].loc[idx, "v"])
-        v = paras['speed']
+        v = paras['speed_mmpersecond']
 
         c = paras['c']
         k_1 = paras['k_1']
@@ -176,7 +176,7 @@ def film_thickness_model(h, t, paras, idx=None, changing_inputs=None):
 
 def arrhenius_solve_cof(param_0, Q, T):
     """
-    Given constants for the Arrhenius equation and the temperature
+    Given constants for the Arrhenius equation and the temperature_degC
     (in Kelvin), gives the coefficient of friction at a given
     Temperature.
 
@@ -229,7 +229,7 @@ def arrhenius_solve_eta(param_0, Q, T):
 
 def convert_to_kelvin(T):
     """
-    Converts temperature in Degrees Celcius to Kelvin
+    Converts temperature_degC in Degrees Celcius to Kelvin
 
     Parameters
     ----------
@@ -262,9 +262,9 @@ def print_evaluated_cof_eta(paras):
         Just prints the evaluated eta and coefficient of friction
         (fully lubricated and dry) given the test conditions.
     """
-    eta = arrhenius_solve_eta(paras['eta_0'], paras['Q_eta'], convert_to_kelvin(paras['temperature']))
-    cof_lub = arrhenius_solve_cof(paras['mu0_lubricated'], paras['Q_lubricated'], convert_to_kelvin(paras['temperature']))
-    cof_dry = arrhenius_solve_cof(paras['mu0_dry'], paras['Q_dry'], convert_to_kelvin(paras['temperature']))
+    eta = arrhenius_solve_eta(paras['eta_0'], paras['Q_eta'], convert_to_kelvin(paras['temperature_degC']))
+    cof_lub = arrhenius_solve_cof(paras['mu0_lubricated'], paras['Q_lubricated'], convert_to_kelvin(paras['temperature_degC']))
+    cof_dry = arrhenius_solve_cof(paras['mu0_dry'], paras['Q_dry'], convert_to_kelvin(paras['temperature_degC']))
 
     print(f"Evaluated eta: {eta}")
     print(f"Evaluated CoF lubricated: {cof_lub}")
@@ -272,7 +272,7 @@ def print_evaluated_cof_eta(paras):
     return None
 
 
-def solve_all(x_input, lubricant_thickness, paras, time_input):
+def solve_all(x_input, lubricant_thickness_micrometres, paras, time_input):
     """
     Default required x_input value: An array of sliding distances.
 
@@ -281,7 +281,7 @@ def solve_all(x_input, lubricant_thickness, paras, time_input):
     If time_input = True:
         - x_input is an array of time elapsed since the start of the test.
 
-    lubricant_thickness is the initial lubricant volume.
+    lubricant_thickness_micrometres is the initial lubricant volume.
 
     Parameters
     ----------
@@ -289,7 +289,7 @@ def solve_all(x_input, lubricant_thickness, paras, time_input):
         The values of x to be used. This will either be sliding distances
         or time elapsed since the start of the test. The required
         values to be input will depend on the state of time_input.
-    lubricant_thickness: Union[int, float]
+    lubricant_thickness_micrometres: Union[int, float]
         The initial lubricant thickness in micrometres.
     paras: dict
         A dictionary containing information about the test
@@ -310,15 +310,14 @@ def solve_all(x_input, lubricant_thickness, paras, time_input):
     Exception
         If the time_input input is not a boolean.
     """
-
     if time_input == False:
-        t = x_input/paras['speed']
+        t = x_input/paras['speed_mmpersecond']
     elif time_input == True:
         t = x_input
     else:
         raise Exception(f'time_input should be Boolean (T/F). The time_input was set to {time_input}')
 
-    h_array = odeint(film_thickness_model, lubricant_thickness, t, args=(paras,))
+    h_array = odeint(film_thickness_model, lubricant_thickness_micrometres, t, args=(paras,))
 
     # If the graph breaks, adjust the decimals this is rounded to.
     h_array = np.around(h_array, decimals=9)
@@ -359,11 +358,11 @@ def model_dataset(params, i, x_input, time_input):
 
     iteration_params = {}
 
-    iteration_params["temperature"] = params[f"temperature_{i+1}"]
-    iteration_params["force"] = params[f"force_{i+1}"]
-    iteration_params["pressure"] = params[f"pressure_{i+1}"]
-    iteration_params["speed"] = params[f"speed_{i+1}"]
-    iteration_params["lubricant_thickness"] = params[f"lubricant_thickness_{i+1}"]
+    iteration_params["temperature_degC"] = params[f"temperature_degC_{i+1}"]
+    iteration_params["force_N"] = params[f"force_N_{i+1}"]
+    iteration_params["pressure_MPa"] = params[f"pressure_MPa_{i+1}"]
+    iteration_params["speed_mmpersecond"] = params[f"speed_mmpersecond_{i+1}"]
+    iteration_params["lubricant_thickness_micrometres"] = params[f"lubricant_thickness_micrometres_{i+1}"]
     iteration_params["mu0_lubricated"] = params[f"mu_lubricated_0_{i+1}"]
     iteration_params["Q_lubricated"] = params[f"Q_lubricated_{i+1}"]
     iteration_params["mu0_dry"] = params[f"mu_dry_0_1{i+1}"]
@@ -380,10 +379,10 @@ def model_dataset(params, i, x_input, time_input):
     # iteration_params["delta_constraint"] = params[f"delta_constraint_{i+1}"]
     # iteration_params["lambda_1_constraint_1"] = params[f"lambda_1_constraint_1_{i+1}"]
 
-    lubricant_thickness = iteration_params['lubricant_thickness'].value
+    lubricant_thickness_micrometres = iteration_params['lubricant_thickness_micrometres'].value
 
     # For optimisation you need to convert to time input on the x axis.
-    return solve_all(x_input, lubricant_thickness, iteration_params, time_input=time_input)
+    return solve_all(x_input, lubricant_thickness_micrometres, iteration_params, time_input=time_input)
 
 
 def objective(params, x_set, data, time_input):
@@ -477,14 +476,14 @@ def plot_graphs(plotting_range, base, list_zipped_results, time_input=True, titl
     for _, item in enumerate(list_zipped_results):
 
         if time_input == False:
-            cof_computed = solve_all(plotting_range, item[0]['lubricant_thickness'], item[0], time_input=False)
+            cof_computed = solve_all(plotting_range, item[0]['lubricant_thickness_micrometres'], item[0], time_input=False)
             xlabel = "Sliding Distance/mm"
         elif time_input == True:
-            cof_computed = solve_all(plotting_range, item[0]['lubricant_thickness'], item[0], time_input=True)
+            cof_computed = solve_all(plotting_range, item[0]['lubricant_thickness_micrometres'], item[0], time_input=True)
             xlabel = "Time Elapsed/s"
 
         # Plot the base in all 4 segments
-        if item[0]['temperature'] == base['temperature'] and item[0]['speed'] == base['speed'] and item[0]['force'] == base['force'] and item[0]['lubricant_thickness'] == base['lubricant_thickness']:
+        if item[0]['temperature_degC'] == base['temperature_degC'] and item[0]['speed_mmpersecond'] == base['speed_mmpersecond'] and item[0]['force_N'] == base['force_N'] and item[0]['lubricant_thickness_micrometres'] == base['lubricant_thickness_micrometres']:
             for i in range(2):
                 for j in range(2):
 
@@ -494,36 +493,36 @@ def plot_graphs(plotting_range, base, list_zipped_results, time_input=True, titl
                     ax[i,j].set_ylabel("Coefficient of Friction")
                     if i==0 and j==0:
                         ax[i,j].plot(plotting_range, cof_computed)
-                        ax[i,j].scatter(item[1], item[2], label=f"T={item[0]['temperature']}", s=5)
+                        ax[i,j].scatter(item[1], item[2], label=f"T={item[0]['temperature_degC']}", s=5)
                     elif i==0 and j==1:
                         ax[i,j].plot(plotting_range, cof_computed)
-                        ax[i,j].scatter(item[1], item[2], label=f"lubricant_thickness={item[0]['lubricant_thickness']}micrometers", s=5)
+                        ax[i,j].scatter(item[1], item[2], label=f"lubricant_thickness_micrometres={item[0]['lubricant_thickness_micrometres']}micrometres", s=5)
                     elif i==1 and j==0:
                         ax[i,j].plot(plotting_range, cof_computed)
-                        ax[i,j].scatter(item[1], item[2], label=f"F={item[0]['force']}N", s=5)
+                        ax[i,j].scatter(item[1], item[2], label=f"F={item[0]['force_N']}N", s=5)
                     elif i==1 and j==1:
                         ax[i,j].plot(plotting_range, cof_computed)
-                        ax[i,j].scatter(item[1], item[2], label=f"v={item[0]['speed']}mm/s", s=5)
+                        ax[i,j].scatter(item[1], item[2], label=f"v={item[0]['speed_mmpersecond']}mm/s", s=5)
 
 
         # Changing T (0,0).
-        elif item[0]['speed'] == base['speed'] and item[0]['force'] == base['force'] and item[0]['lubricant_thickness'] == base['lubricant_thickness'] and item[0]['temperature'] != base['temperature']:
-            ax[0,0].scatter(item[1], item[2], label=f"T={item[0]['temperature']}", s=5)
+        elif item[0]['speed_mmpersecond'] == base['speed_mmpersecond'] and item[0]['force_N'] == base['force_N'] and item[0]['lubricant_thickness_micrometres'] == base['lubricant_thickness_micrometres'] and item[0]['temperature_degC'] != base['temperature_degC']:
+            ax[0,0].scatter(item[1], item[2], label=f"T={item[0]['temperature_degC']}", s=5)
             ax[0,0].plot(plotting_range, cof_computed)
 
         # Changing V (0,1).
-        elif item[0]['speed'] == base['speed'] and item[0]['force'] == base['force'] and item[0]['temperature'] == base['temperature'] and item[0]['lubricant_thickness'] != base['lubricant_thickness']:
-            ax[0,1].scatter(item[1], item[2], label=f"lubricant_thickness={item[0]['speed']}ss", s=5)
+        elif item[0]['speed_mmpersecond'] == base['speed_mmpersecond'] and item[0]['force_N'] == base['force_N'] and item[0]['temperature_degC'] == base['temperature_degC'] and item[0]['lubricant_thickness_micrometres'] != base['lubricant_thickness_micrometres']:
+            ax[0,1].scatter(item[1], item[2], label=f"lubricant_thickness_micrometres={item[0]['speed_mmpersecond']}ss", s=5)
             ax[0,1].plot(plotting_range, cof_computed)
 
         # Changing F (1,0).
-        elif item[0]['speed'] == base['speed'] and item[0]['temperature'] == base['temperature'] and item[0]['lubricant_thickness'] == base['lubricant_thickness'] and item[0]['force'] != base['force']:
-            ax[1,0].scatter(item[1], item[2], label=f"F={item[0]['force']}N", s=5)
+        elif item[0]['speed_mmpersecond'] == base['speed_mmpersecond'] and item[0]['temperature_degC'] == base['temperature_degC'] and item[0]['lubricant_thickness_micrometres'] == base['lubricant_thickness_micrometres'] and item[0]['force_N'] != base['force_N']:
+            ax[1,0].scatter(item[1], item[2], label=f"F={item[0]['force_N']}N", s=5)
             ax[1,0].plot(plotting_range, cof_computed)
 
         # Changing v (1,1).
-        elif item[0]['temperature'] == base['temperature'] and item[0]['force'] == base['force'] and item[0]['lubricant_thickness'] == base['lubricant_thickness'] and item[0]['speed'] != base['speed']:
-            ax[1,1].scatter(item[1], item[2], label=f"v={item[0]['speed']}mm/s", s=5)
+        elif item[0]['temperature_degC'] == base['temperature_degC'] and item[0]['force_N'] == base['force_N'] and item[0]['lubricant_thickness_micrometres'] == base['lubricant_thickness_micrometres'] and item[0]['speed_mmpersecond'] != base['speed_mmpersecond']:
+            ax[1,1].scatter(item[1], item[2], label=f"v={item[0]['speed_mmpersecond']}mm/s", s=5)
             ax[1,1].plot(plotting_range, cof_computed)
 
     # Setting the properties for all the axes.
@@ -567,10 +566,10 @@ def optimise_friction_results(testing_parameters, x_measured_set, cof_measured_s
     ### Create the sets of fitting parameters, one for each set of data.
     for iy, dictionary in enumerate(testing_parameters, 1):
         # Each item in the list testing_parameters has a dictionary with test conditions.
-        fit_params.add(f"temperature_{iy}", value=dictionary["temperature"], vary=False)
-        fit_params.add(f"pressure_{iy}", value=dictionary["pressure"], vary=False)
-        fit_params.add(f"force_{iy}", value=dictionary["force"], vary=False)
-        fit_params.add(f"speed_{iy}", value=dictionary["speed"], vary=False)
+        fit_params.add(f"temperature_degC_{iy}", value=dictionary["temperature_degC"], vary=False)
+        fit_params.add(f"pressure_MPa_{iy}", value=dictionary["pressure_MPa"], vary=False)
+        fit_params.add(f"force_N_{iy}", value=dictionary["force_N"], vary=False)
+        fit_params.add(f"speed_mmpersecond_{iy}", value=dictionary["speed_mmpersecond"], vary=False)
         fit_params.add(f"lubricant_thickness_{iy}", value=dictionary["lubricant_thickness"], vary=False)
 
         fit_params.add(f"mu_lubricated_0_{iy}", value=dictionary["mu0_lubricated"], vary=False)
@@ -584,7 +583,7 @@ def optimise_friction_results(testing_parameters, x_measured_set, cof_measured_s
         fit_params.add(f"lambda_1_{iy}", value=dictionary["lambda_1"], min=RANGE_LAMBDA1[0], max=RANGE_LAMBDA1[1], vary=True)
         fit_params.add(f"lambda_2_{iy}", value=dictionary["lambda_2"], min=RANGE_LAMBDA2[0], max=RANGE_LAMBDA2[1], vary=True)
 
-        phys_constr = dictionary["blank_roughness"]
+        phys_constr = dictionary["blank_roughness_Ra"]
         # fit_params.add(f"delta_constraint_{iy}", min=math.log(14.), max=math.log(16.))
         # fit_params.add(f"lambda_2_{iy}", expr=f'delta_constraint_{iy}/(log({phys_constr}*lambda_1_{iy}))')
 
@@ -676,7 +675,7 @@ def optimise_friction_results(testing_parameters, x_measured_set, cof_measured_s
 def test_plotting():
     """ To test that the plotting function works as required. Call the function to see results. """
     # To test that the plotting works
-    current_test_parameters_1 = dict(temperature=450, force=5, pressure=0.34, speed=50, lubricant_thickness=25, lubricant_volume=23.2,
+    current_test_parameters_1 = dict(temperature_degC=450, force_N=5, pressure_MPa=0.34, speed_mmpersecond=50, lubricant_thickness_micrometres=25, lubricant_volume_gperm2=23.2,
                                      mu0_lubricated = 1.69073, Q_lubricated = 9141.50683,
                                      mu0_dry = 10.94225, Q_dry = 9368.85126, eta_0 = 0.12,
                                      Q_eta = 11930, lambda_1 = 40, lambda_2 = 1.5, c = 0.00847,
@@ -714,14 +713,14 @@ def manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_
 
     y_vals_list = []
     for test_parameter in testing_parameters_all:
-        y_vals = solve_all(plotting_range, test_parameter['lubricant_thickness'], test_parameter, time_input=False)
+        y_vals = solve_all(plotting_range, test_parameter['lubricant_thickness_micrometres'], test_parameter, time_input=False)
         y_vals_list.append(y_vals)
 
     plot_list = []
 
     lubricant_id = testing_parameters_all[0]['lubricant_id']
     group_id = testing_parameters_all[0]['group_id']
-    blank_roughness = testing_parameters_all[0]['blank_roughness']
+    blank_roughness_Ra = testing_parameters_all[0]['blank_roughness_Ra']
 
 
     fig, ax = plt.subplots(figsize=(11, 7.37))
@@ -735,13 +734,13 @@ def manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_
 
 
     for idx, y_vals in enumerate(y_vals_list):
-        T = testing_parameters_all[idx]['temperature']
-        v = testing_parameters_all[idx]['speed']
-        V = testing_parameters_all[idx]['speed']
-        F = testing_parameters_all[idx]['force']
+        T = testing_parameters_all[idx]['temperature_degC']
+        v = testing_parameters_all[idx]['speed_mmpersecond']
+        V = testing_parameters_all[idx]['lubricant_thickness_micrometres']
+        F = testing_parameters_all[idx]['force_N']
 
         # l, = plt.plot(plotting_range, y_vals, lw=2, label=f'T={T}')
-        l, = plt.plot(plotting_range, y_vals, lw=2, label=f'T={T}, v={v}, V={V}, F={F}')
+        l, = plt.plot(plotting_range, y_vals, lw=2, label=f'T={T}, v={v}, lub_thickness={V}, F={F}')
         ax.scatter(sd_measured_set[idx], cof_measured_set[idx], s=8)
         plot_list.append(l)
 
@@ -753,7 +752,7 @@ def manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_
     plot_storage.store_testing_parameters_all(testing_parameters_all)
     plot_storage.store_y_vals_list(y_vals_list)
     plot_storage.store_plot_list(plot_list)
-    plot_storage.store_blank_roughness(blank_roughness)
+    plot_storage.store_blank_roughness(blank_roughness_Ra)
     plot_storage.store_lubricant_id(lubricant_id)
     plot_storage.store_group_id(group_id)
 
@@ -815,10 +814,10 @@ def manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_
         k_3 = k3_slider.val
         c = c_slider.val
 
-        blank_roughness = plot_storage.blank_roughness
+        blank_roughness_Ra = plot_storage.blank_roughness_Ra
 
-        constraint1 = (blank_roughness*lambda_1)**lambda_2 < 8
-        constraint2 = (blank_roughness*lambda_1)**lambda_2 > 16
+        constraint1 = (blank_roughness_Ra*lambda_1)**lambda_2 < 8
+        constraint2 = (blank_roughness_Ra*lambda_1)**lambda_2 > 16
 
         if constraint1 or constraint2:
             print("Physical Constraint Failed (Change Lambda1 and Lambda2)")
@@ -836,7 +835,7 @@ def manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_
         # Update the graph
         for idx, current_test_parameters in enumerate(testing_parameters_all):
             current_test_parameters = {**current_test_parameters, **updated_params}
-            ans = solve_all(plotting_range, current_test_parameters['lubricant_thickness'], current_test_parameters, time_input=False)
+            ans = solve_all(plotting_range, current_test_parameters['lubricant_thickness_micrometres'], current_test_parameters, time_input=False)
             plot_list[idx].set_ydata(ans)
 
         # redraw canvas while idle
@@ -863,7 +862,7 @@ def manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_
         # Update the graph
         for idx, current_test_parameters in enumerate(testing_parameters_all):
             current_test_parameters = {**current_test_parameters, **updated_params}
-            ans = solve_all(plotting_range, current_test_parameters['lubricant_thickness'], current_test_parameters, time_input=False)
+            ans = solve_all(plotting_range, current_test_parameters['lubricant_thickness_micrometres'], current_test_parameters, time_input=False)
             plot_list[idx].set_ydata(ans)
 
         # redraw canvas while idle
@@ -908,8 +907,8 @@ class PlottingStorage():
     def store_plot_list(self, plot_list):
         self.plot_list = plot_list
 
-    def store_blank_roughness(self, blank_roughness):
-        self.blank_roughness = blank_roughness
+    def store_blank_roughness(self, blank_roughness_Ra):
+        self.blank_roughness_Ra = blank_roughness_Ra
 
     def store_lubricant_id(self, lubricant_id):
         self.lubricant_id = lubricant_id
