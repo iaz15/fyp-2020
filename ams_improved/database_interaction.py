@@ -56,16 +56,17 @@ def create_database():
 
     conditions = Table('conditions', metadata,
         Column('condition_id', Integer(), primary_key=True, autoincrement=True),
-        Column('group_id', Integer(), ForeignKey('optimisation_groups.group_id')),
+        Column('group_id', Integer(), ForeignKey('condition_groups.group_id')),
         Column('temperature', Integer()),
         Column('force', Integer()),
         Column('pressure', Float()),
         Column('speed', Integer()),
         Column('lubricant_thickness', Integer()),
+        Column('equiv_solid_thickness', Float(), index=True),
         Column('avg_filename', String(100)),
     )
 
-    optimisation_groups = Table('optimisation_groups', metadata,
+    condition_groups = Table('condition_groups', metadata,
         Column('group_id', Integer(), primary_key=True, autoincrement=True),
         Column('lubricant_id', Integer(), ForeignKey('lubricants.lubricant_id')),
         Column('pin_material', String(55)),
@@ -76,6 +77,30 @@ def create_database():
         Column('coating_material', String(55)),
         Column('coating_roughness', Float()),
         Column('coating_thickness', Float()),
+    )
+
+    model_params_liquid = Table('model_params_liquid', metadata,
+        Column('entry_id', Integer(), primary_key=True, autoincrement=True),
+        Column('group_id', Integer(), ForeignKey('condition_groups.group_id')),
+
+        Column('eta_0', Float()),
+        Column('Q_eta', Float()),
+        Column('mu0_lubricated', Float()),
+        Column('Q_lubricated', Float()),
+        Column('mu0_dry', Float()),
+        Column('Q_dry', Float()),
+
+        Column('lambda_1', Float()),
+        Column('lambda_2', Float()),
+        Column('c', Float()),
+        Column('k_1', Float()),
+        Column('k_2', Float()),
+        Column('k_3', Float())
+    )
+
+    model_params_liquid_solid = Table('model_params_liquid_solid', metadata,
+        Column('entry_id', Integer(), primary_key=True, autoincrement=True),
+        Column('group_id', Integer(), ForeignKey('condition_groups.group_id')),
 
         Column('eta_0', Float()),
         Column('Q_eta', Float()),
@@ -95,6 +120,10 @@ def create_database():
     lubricants = Table('lubricants', metadata,
         Column('lubricant_id', Integer(), primary_key=True, autoincrement=True),
         Column('name', String(55), index=True),
+        Column('includes_liquid', Boolean(), index=True),
+        Column('includes_solid', Boolean(), index=True),
+        Column('density_liquid', Float(), index=True),
+        Column('avg_hardness_solid', Float(), index=True)
     )
 
     intermediate_values = Table('intermediate_values', metadata,
@@ -140,22 +169,22 @@ def add_experiment_database(experiment):
     # Load the tables
     experiments = sqlalchemy.Table('experiments', metadata, autoload=True, autoload_with=engine)
     conditions = sqlalchemy.Table('conditions', metadata, autoload=True, autoload_with=engine)
-    optimisation_groups = sqlalchemy.Table('optimisation_groups', metadata, autoload=True, autoload_with=engine)
+    condition_groups = sqlalchemy.Table('condition_groups', metadata, autoload=True, autoload_with=engine)
     lubricants = sqlalchemy.Table('lubricants', metadata, autoload=True, autoload_with=engine)
 
     # Add to experiment values into the right columns and tables
 
     ### First determine group_id & insert row as necessary
-    query = select([optimisation_groups.c.group_id])\
-                    .where(getattr(optimisation_groups.c, 'lubricant_id') == getattr(experiment.conditions, 'lubricant_id'))\
-                    .where(getattr(optimisation_groups.c, 'blank_material') == getattr(experiment.conditions, 'blank_material'))\
-                    .where(getattr(optimisation_groups.c, 'blank_roughness') == getattr(experiment.conditions, 'blank_roughness'))\
-                    .where(getattr(optimisation_groups.c, 'blank_material') == getattr(experiment.conditions, 'blank_material'))\
-                    .where(getattr(optimisation_groups.c, 'pin_material') == getattr(experiment.conditions, 'pin_material'))\
-                    .where(getattr(optimisation_groups.c, 'pin_roughness') == getattr(experiment.conditions, 'pin_roughness'))\
-                    .where(getattr(optimisation_groups.c, 'coating_material') == getattr(experiment.conditions, 'coating_material'))\
-                    .where(getattr(optimisation_groups.c, 'coating_roughness') == getattr(experiment.conditions, 'coating_roughness'))\
-                    .where(getattr(optimisation_groups.c, 'coating_thickness') == getattr(experiment.conditions, 'coating_thickness'))
+    query = select([condition_groups.c.group_id])\
+                    .where(getattr(condition_groups.c, 'lubricant_id') == getattr(experiment.conditions, 'lubricant_id'))\
+                    .where(getattr(condition_groups.c, 'blank_material') == getattr(experiment.conditions, 'blank_material'))\
+                    .where(getattr(condition_groups.c, 'blank_roughness') == getattr(experiment.conditions, 'blank_roughness'))\
+                    .where(getattr(condition_groups.c, 'blank_material') == getattr(experiment.conditions, 'blank_material'))\
+                    .where(getattr(condition_groups.c, 'pin_material') == getattr(experiment.conditions, 'pin_material'))\
+                    .where(getattr(condition_groups.c, 'pin_roughness') == getattr(experiment.conditions, 'pin_roughness'))\
+                    .where(getattr(condition_groups.c, 'coating_material') == getattr(experiment.conditions, 'coating_material'))\
+                    .where(getattr(condition_groups.c, 'coating_roughness') == getattr(experiment.conditions, 'coating_roughness'))\
+                    .where(getattr(condition_groups.c, 'coating_thickness') == getattr(experiment.conditions, 'coating_thickness'))
 
     # There should only 1 matching group_id maximum
     result_proxy  = con.execute(query)
@@ -166,7 +195,7 @@ def add_experiment_database(experiment):
         experiment.set_group_id(matching_group_num)
     else:
         # Otherwise insert as a new row
-        query = select([func.max(optimisation_groups.c.group_id)])
+        query = select([func.max(condition_groups.c.group_id)])
         result_proxy  = con.execute(query)
         max_group_id = result_proxy.scalar()
 
@@ -175,7 +204,7 @@ def add_experiment_database(experiment):
 
         experiment.set_group_id(max_group_id + 1)
 
-        insert_stmt = insert(optimisation_groups).\
+        insert_stmt = insert(condition_groups).\
                         values(lubricant_id=experiment.conditions.lubricant_id, blank_material=experiment.conditions.blank_material,\
                                 blank_roughness=experiment.conditions.blank_roughness, blank_thickness=experiment.conditions.blank_thickness,\
                                 pin_material=experiment.conditions.pin_material, pin_roughness=experiment.conditions.pin_roughness,\
@@ -239,23 +268,22 @@ def initialise_new_database():
     try:
         # remove existing database
         os.remove('friction_model.db')
-
-        # create the database
-        create_database()
-
-        # insert sample lubricants that will be used
-        insert_example_lubricants()
-
-        ### 1. USER UPLOADS DATA AND INPUTS TEST CONDITIONS
-        # create sample experiment objects that will be passed in to the database
-        experiments_dict = create_sample_datasets()
-
-        # insert each experiment into the database and populate columns accordingly
-        for experiment in experiments_dict.values():
-            add_experiment_database(experiment)
-
     except:
         pass
+
+    # create the database
+    create_database()
+
+    # insert sample lubricants that will be used
+    insert_example_lubricants()
+
+    ### 1. USER UPLOADS DATA AND INPUTS TEST CONDITIONS
+    # create sample experiment objects that will be passed in to the database
+    experiments_dict = create_sample_datasets()
+
+    # insert each experiment into the database and populate columns accordingly
+    for experiment in experiments_dict.values():
+        add_experiment_database(experiment)
 
 
 def create_sample_datasets():
@@ -304,7 +332,7 @@ def average_data(condition_id, plot_results=True, print_experiments=False):
     # Load the tables
     experiments = sqlalchemy.Table('experiments', metadata, autoload=True, autoload_with=engine)
     conditions = sqlalchemy.Table('conditions', metadata, autoload=True, autoload_with=engine)
-    optimisation_groups = sqlalchemy.Table('optimisation_groups', metadata, autoload=True, autoload_with=engine)
+    condition_groups = sqlalchemy.Table('condition_groups', metadata, autoload=True, autoload_with=engine)
     lubricants = sqlalchemy.Table('lubricants', metadata, autoload=True, autoload_with=engine)
 
     stmt = select([experiments.c.experiment_id, conditions.c.condition_id, experiments.c.filename, conditions.c.temperature, conditions.c.speed,
@@ -354,17 +382,17 @@ def average_data(condition_id, plot_results=True, print_experiments=False):
         con.close()
 
 
-def add_fitting_parameters_db(group_id, params):
+def add_fitting_params_db(group_id, params):
 
     engine = create_engine('sqlite:///friction_model.db')
     con = engine.connect()
     metadata = sqlalchemy.MetaData()
 
     # Load the tables
-    optimisation_groups = sqlalchemy.Table('optimisation_groups', metadata, autoload=True, autoload_with=engine)
+    model_params_liquid = sqlalchemy.Table('model_params_liquid', metadata, autoload=True, autoload_with=engine)
 
     # Update database with averaged file name
-    u = update(optimisation_groups).where(optimisation_groups.c.group_id == int(group_id))
+    u = update(model_params_liquid).where(model_params_liquid.c.group_id == int(group_id))
     u = u.values(eta_0=params['eta_0'], Q_eta=params['Q_eta'], mu0_lubricated=params['mu0_lubricated'],
                  Q_lubricated=params['Q_lubricated'], mu0_dry=params['mu0_dry'], Q_dry=params['Q_dry'],
                  lambda_1=params['lambda_1'], lambda_2=params['lambda_2'], c=params['c'],
@@ -377,7 +405,7 @@ def add_fitting_parameters_db(group_id, params):
 
 def extract_data_fitting(group_id):
     df_conditions_table = pd.DataFrame()
-    parameters_conditions_dict = {}
+    params_conditions_dict = {}
 
     engine = create_engine('sqlite:///friction_model.db')
     con = engine.connect()
@@ -385,9 +413,9 @@ def extract_data_fitting(group_id):
 
     # Load the tables
     conditions = sqlalchemy.Table('conditions', metadata, autoload=True, autoload_with=engine)
-    optimisation_groups = sqlalchemy.Table('optimisation_groups', metadata, autoload=True, autoload_with=engine)
+    condition_groups = sqlalchemy.Table('condition_groups', metadata, autoload=True, autoload_with=engine)
 
-    # We want to get the (model parameters) + (temperature + speed + force + lubricant thickness) + (avg_filenames)
+    # We want to get the (model params) + (temperature + speed + force + lubricant thickness) + (avg_filenames)
 
     ### 1. Get the variable test conditions for each experiment for a group
     stmt = select([conditions.c.condition_id, conditions.c.group_id, conditions.c.avg_filename,
@@ -402,31 +430,31 @@ def extract_data_fitting(group_id):
     df_conditions_table = pd.DataFrame(results)
     df_conditions_table.columns = result_proxy.keys()
 
-    ### 3. Get the parameters and static conditions for a group
-    stmt = select([optimisation_groups])
-    stmt = stmt.where(optimisation_groups.c.group_id==group_id)
+    ### 3. Get the params and static conditions for a group
+    stmt = select([condition_groups])
+    stmt = stmt.where(condition_groups.c.group_id==group_id)
 
     result_proxy = con.execute(stmt)
     results = result_proxy.fetchall()
 
-    ### 4. Obtain a dictionary for parameters + static test condition
+    ### 4. Obtain a dictionary for params + static test condition
     # Unpack the values into a single list
     results_unpacked = []
     for result in results:
         results_unpacked = [item for sublist in results for item in sublist]
 
-    parameters_conditions_dict = dict(zip(result_proxy.keys(), results_unpacked))
+    params_conditions_dict = dict(zip(result_proxy.keys(), results_unpacked))
 
     con.close()
-    return df_conditions_table, parameters_conditions_dict
+    return df_conditions_table, params_conditions_dict
 
 
-def transform_params_fitting(df_conditions_table, parameters_conditions_dict):
+def transform_params_fitting(df_conditions_table, params_conditions_dict):
     df_variable_conditions = df_conditions_table.loc[:, ['temperature', 'speed', 'force', 'lubricant_thickness', 'pressure']]
     dict_variable_conditions = df_variable_conditions.to_dict('records')
-    testing_parameters_all = [{**record, **parameters_conditions_dict} for record in dict_variable_conditions]
+    testing_params_all = [{**record, **params_conditions_dict} for record in dict_variable_conditions]
 
-    return testing_parameters_all
+    return testing_params_all
 
 
 def extract_experimental_data(df_conditions_table):
@@ -444,7 +472,7 @@ def extract_experimental_data(df_conditions_table):
     return sd_measured_set, cof_measured_set
 
 
-def update_model_parameters(group_id, params):
+def update_model_params(group_id, params):
     """ Using the name of the lubricant, the correct row will be updated. """
 
     engine = create_engine('sqlite:///friction_model.db')
@@ -452,11 +480,11 @@ def update_model_parameters(group_id, params):
     metadata = sqlalchemy.MetaData()
 
     # Load the tables
-    optimisation_groups = sqlalchemy.Table('optimisation_groups', metadata, autoload=True, autoload_with=engine)
+    condition_groups = sqlalchemy.Table('condition_groups', metadata, autoload=True, autoload_with=engine)
 
     print("Group id", group_id)
     # Update database with averaged file name
-    u = update(optimisation_groups).where(optimisation_groups.c.group_id == int(group_id))
+    u = update(condition_groups).where(condition_groups.c.group_id == int(group_id))
     u = u.values(lambda_1=params['lambda_1'], lambda_2=params['lambda_2'], c=params['c'],
                  k_1=params['k_1'], k_2=params['k_2'], k_3=params['k_3'])
 
@@ -470,74 +498,74 @@ if __name__ == "__main__":
     ### 1. INITIALISE THE DATABASE WITH STARTING VALUES (Removes existing)
     initialise_new_database()
 
-    ### 2. USER WILL WANT TO DO SOME DATA PROCESSING ON REPEATED FILES - Modify condition_id to see results
-    # Use information in database and data in stored files to average the data accordingly
-    # There are 4 conditions. Change the value to see the effect
-    condition_id = 1
-    average_data(1, plot_results=False, print_experiments=False)
-    average_data(2, plot_results=False, print_experiments=False)
-    average_data(3, plot_results=False, print_experiments=False)
+    # ### 2. USER WILL WANT TO DO SOME DATA PROCESSING ON REPEATED FILES - Modify condition_id to see results
+    # # Use information in database and data in stored files to average the data accordingly
+    # # There are 4 conditions. Change the value to see the effect
+    # condition_id = 1
+    # average_data(1, plot_results=False, print_experiments=False)
+    # average_data(2, plot_results=False, print_experiments=False)
+    # average_data(3, plot_results=False, print_experiments=False)
 
 
-    ### 3. POPULATE THE PARAMETER COLUMNS WITH INITIAL ESTIMATES FOR THAT GROUP
-    # High speed Omega35
-    group_id = 1
-    group_1_parameters = {'eta_0': 0.13, 'Q_eta': 11930, 'mu0_lubricated': 1.69, 'Q_lubricated': 9141.5,
-                          'mu0_dry': 10.94, 'Q_dry': 9368.8, 'lambda_1': 40, 'lambda_2': 1.5, 'c': 0.00847,
-                          'k_1': 1.52, 'k_2': 2.67, 'k_3': 4.58}
-
-    add_fitting_parameters_db(group_id=group_id, params=group_1_parameters)
-
-    ### 4. Extract the files and information necessary for plotting and transform into the correct format for manual fitting
-    group_id = 1
-    df_conditions_table, parameters_conditions_dict = extract_data_fitting(group_id=group_id)
-    testing_parameters_all = transform_params_fitting(df_conditions_table, parameters_conditions_dict)
-    sd_measured_set, cof_measured_set = extract_experimental_data(df_conditions_table)
-
-    # ### 5. Plot results
-    # list_zipped_results = list(zip(testing_parameters_all, sd_measured_set, cof_measured_set))
-    # plotting_range = np.linspace(0, 88, 420)
-    # base = testing_parameters_all[0]            # Make sure the selected one is the right set of parameters
-    # data_fitting.plot_graphs(plotting_range=plotting_range, base=base, list_zipped_results=list_zipped_results, time_input=False, title="Interactive Friction Model")
-
-    # ### 6. Manual fitting
-    data_fitting.manual_fitting_slider(testing_parameters_all, sd_measured_set, cof_measured_set)
-
-    # ### 7. Extract the files and information necessary for plotting and transform into the correct format for automatic fitting
+    # ### 3. POPULATE THE PARAMETER COLUMNS WITH INITIAL ESTIMATES FOR THAT GROUP
+    # # High speed Omega35
     # group_id = 1
-    # df_conditions_table, parameters_conditions_dict = extract_data_fitting(group_id=group_id)
-    # testing_parameters_all = transform_params_fitting(df_conditions_table, parameters_conditions_dict)
+    # group_1_params = {'eta_0': 0.13, 'Q_eta': 11930, 'mu0_lubricated': 1.69, 'Q_lubricated': 9141.5,
+    #                       'mu0_dry': 10.94, 'Q_dry': 9368.8, 'lambda_1': 40, 'lambda_2': 1.5, 'c': 0.00847,
+    #                       'k_1': 1.52, 'k_2': 2.67, 'k_3': 4.58}
+
+    # add_fitting_params_db(group_id=group_id, params=group_1_params)
+
+    # ### 4. Extract the files and information necessary for plotting and transform into the correct format for manual fitting
+    # group_id = 1
+    # df_conditions_table, params_conditions_dict = extract_data_fitting(group_id=group_id)
+    # testing_params_all = transform_params_fitting(df_conditions_table, params_conditions_dict)
     # sd_measured_set, cof_measured_set = extract_experimental_data(df_conditions_table)
 
-    # ### 8. Automatic fitting
-    # RANGE_C = [0.005, 0.02]
-    # RANGE_K1 = [1, 3]
-    # RANGE_K2 = [2, 3]
-    # RANGE_K3 = [2, 10]
-    # RANGE_LAMBDA1 = [0.1, 42]
-    # RANGE_LAMBDA2 = [0.1, 3]
+    # # ### 5. Plot results
+    # # list_zipped_results = list(zip(testing_params_all, sd_measured_set, cof_measured_set))
+    # # plotting_range = np.linspace(0, 88, 420)
+    # # base = testing_params_all[0]            # Make sure the selected one is the right set of params
+    # # data_fitting.plot_graphs(plotting_range=plotting_range, base=base, list_zipped_results=list_zipped_results, time_input=False, title="Interactive Friction Model")
 
-    # params_solved = data_fitting.optimise_friction_results(testing_parameters_all, sd_measured_set, cof_measured_set,
-    #                                                        RANGE_C, RANGE_K1, RANGE_K2, RANGE_K3, RANGE_LAMBDA1, RANGE_LAMBDA2,
-    #                                                        time_input=False, plot_results=True)
-    # lubricant_id = params_solved[0]['lubricant_id']
-    # group_id = params_solved[0]['group_id']
-    # blank_material = params_solved[0]['blank_material']
-    # pin_material = params_solved[0]['pin_material']
+    # # ### 6. Manual fitting
+    # data_fitting.manual_fitting_slider(testing_params_all, sd_measured_set, cof_measured_set)
 
-    # print(params_solved)
-    # while True:
-    #     print("Do you want to overwrite the old parameter values? (Y/N)")
-    #     print(f"Group ID: {group_id}")
-    #     print(f"Lubricant ID: {lubricant_id}")
-    #     print(f"Blank Material: {blank_material}")
-    #     print(f"Pin Material: {pin_material}")
-    #     option = input("")
+    # # ### 7. Extract the files and information necessary for plotting and transform into the correct format for automatic fitting
+    # # group_id = 1
+    # # df_conditions_table, params_conditions_dict = extract_data_fitting(group_id=group_id)
+    # # testing_params_all = transform_params_fitting(df_conditions_table, params_conditions_dict)
+    # # sd_measured_set, cof_measured_set = extract_experimental_data(df_conditions_table)
 
-    #     if option == 'Y':
-    #         update_model_parameters(params_solved[0]['group_id'], params_solved[0])
-    #         break
-    #     elif option == 'N':
-    #         break
-    #     else:
-            # pass
+    # # ### 8. Automatic fitting
+    # # RANGE_C = [0.005, 0.02]
+    # # RANGE_K1 = [1, 3]
+    # # RANGE_K2 = [2, 3]
+    # # RANGE_K3 = [2, 10]
+    # # RANGE_LAMBDA1 = [0.1, 42]
+    # # RANGE_LAMBDA2 = [0.1, 3]
+
+    # # params_solved = data_fitting.optimise_friction_results(testing_params_all, sd_measured_set, cof_measured_set,
+    # #                                                        RANGE_C, RANGE_K1, RANGE_K2, RANGE_K3, RANGE_LAMBDA1, RANGE_LAMBDA2,
+    # #                                                        time_input=False, plot_results=True)
+    # # lubricant_id = params_solved[0]['lubricant_id']
+    # # group_id = params_solved[0]['group_id']
+    # # blank_material = params_solved[0]['blank_material']
+    # # pin_material = params_solved[0]['pin_material']
+
+    # # print(params_solved)
+    # # while True:
+    # #     print("Do you want to overwrite the old parameter values? (Y/N)")
+    # #     print(f"Group ID: {group_id}")
+    # #     print(f"Lubricant ID: {lubricant_id}")
+    # #     print(f"Blank Material: {blank_material}")
+    # #     print(f"Pin Material: {pin_material}")
+    # #     option = input("")
+
+    # #     if option == 'Y':
+    # #         update_model_params(params_solved[0]['group_id'], params_solved[0])
+    # #         break
+    # #     elif option == 'N':
+    # #         break
+    # #     else:
+    #         # pass
