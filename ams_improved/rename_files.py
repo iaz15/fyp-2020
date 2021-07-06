@@ -23,33 +23,24 @@ def get_filename_metadata(filename):
 # user fills in form
 # user clicks save -> initialise the class
 class Experiment:
-    def __init__(self, experiment_id, lubricant_id, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
+    def __init__(self, experiment_id, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
                  coating_material, coating_thickness, coating_roughness,
                  temperature, speed, force, pressure, lubricant_thickness):
         self.id = experiment_id
 
-        self.conditions = ExperimentalConditions(lubricant_id, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
+        self.conditions = ExperimentalConditions(lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
                                                  coating_material, coating_thickness, coating_roughness,
                                                  temperature, speed, force, pressure, lubricant_thickness)
 
     def add_output_filename(self, filename):
         self.filename = filename
 
-    def set_condition_id(self, condition_id):
-        self.condition_id = condition_id
-
-    def set_group_id(self, group_id):
-        self.group_id = group_id
-
-    def set_duplicate_number(self, duplicate_number):
-        self.duplicate_number = duplicate_number
-
 class ExperimentalConditions:
-    def __init__(self, lubricant_id, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
+    def __init__(self, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
                  coating_material, coating_thickness, coating_roughness,
-                 temperature, speed, force, pressure, lubricant_thickness):
+                 temperature, speed, force, pressure, lubricant_thickness, equiv_solid_thickness=None):
 
-        self.lubricant_id = lubricant_id
+        self.lubricant = lubricant
 
         self.pin_material = pin_material
         self.pin_roughness = pin_roughness
@@ -67,6 +58,7 @@ class ExperimentalConditions:
         self.pressure = pressure
         self.speed = speed
         self.lubricant_thickness = lubricant_thickness
+        self.equiv_solid_thickness = equiv_solid_thickness
 
 def get_filenames(directory):
     return os.listdir(directory)
@@ -114,11 +106,11 @@ def validate_filenames(filenames):
 
     return invalid_filenames, paired_filenames
 
-def create_experiment(experiment_id, lubricant_id, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
+def create_experiment(experiment_id, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
                                 coating_material, coating_roughness, coating_thickness,
                                 temperature, speed, force, pressure, lubricant_thickness):
 
-    experiment = Experiment(experiment_id, lubricant_id, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
+    experiment = Experiment(experiment_id, lubricant, pin_material, pin_roughness, blank_material, blank_roughness, blank_thickness,
                                 coating_material, coating_roughness, coating_thickness,
                                 temperature, speed, force, pressure, lubricant_thickness)
     return experiment
@@ -126,13 +118,13 @@ def create_experiment(experiment_id, lubricant_id, pin_material, pin_roughness, 
 # todo: placeholder for ui event handling
 def populate_experiment(experiment_id=1):
     # user will pass in:
-    # lubricant_id, pin_material, pin_roughness, blank_material, blank_roughness,
+    # lubricant, pin_material, pin_roughness, blank_material, blank_roughness,
     # temperature, force, speed, lubricant_thickness
 
     # this information will be stored in a list
     experiment_ids = [7, 9]
 
-    lubricant_ids = [1, 1]
+    lubricants = ['Omega 35', 'Omega 35']
     pin_material = ['P20', 'P20']
     pin_roughness = [0.4, 0.4]
     blank_material = ['AA7075', 'AA7075']
@@ -149,12 +141,12 @@ def populate_experiment(experiment_id=1):
     lubricant_thickness = [10, 10]
 
     if experiment_id==1:
-        experiment = Experiment(experiment_ids[0], lubricant_ids[0], pin_material[0], pin_roughness[0], blank_material[0], blank_roughness[0], blank_thickness[0],
+        experiment = Experiment(experiment_ids[0], lubricants[0], pin_material[0], pin_roughness[0], blank_material[0], blank_roughness[0], blank_thickness[0],
         coating_material[0], coating_thickness[0], coating_roughness[0],
         temperature[0], force[0], speed[0], lubricant_thickness[0])
 
     elif experiment_id==2:
-        experiment = Experiment(experiment_ids[1], lubricant_ids[1], pin_material[1], pin_roughness[1], blank_material[1], blank_roughness[1], blank_thickness[1],
+        experiment = Experiment(experiment_ids[1], lubricants[1], pin_material[1], pin_roughness[1], blank_material[1], blank_roughness[1], blank_thickness[1],
         coating_material[1], coating_thickness[1], coating_roughness[1],
         temperature[1], force[1], speed[1], lubricant_thickness[1])
 
@@ -228,8 +220,8 @@ def create_filename_string(exp_num, data_type, test_params, extension):
 
     extension is a string (e.g. .csv).
     """
-    keys = ["lubricantid", "pinMat", "pinRa", "blankMat", "blankRa", "T", "F", "v", "V"]
-    # 15_position_lubricantid=1_pinMat=P20_pinRa=0.8_blankMat=AA7075_blankRa=0.3_T=300_F=6.5_v=50_V=23.2.csv
+    keys = ["lubricant", "pinMat", "pinRa", "blankMat", "blankRa", "T", "F", "v", "V"]
+    # 15_position_lubricant=1_pinMat=P20_pinRa=0.8_blankMat=AA7075_blankRa=0.3_T=300_F=6.5_v=50_V=23.2.csv
     # {experiment_id}_{file_type(force or position)}_{parameter=value}_*.csv
     # all parmameters must be present
 
