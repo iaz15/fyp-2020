@@ -427,9 +427,9 @@ def add_fitting_params_db(group_id, params):
     # Load the tables
     model_params_liquid = sqlalchemy.Table('model_params_liquid', metadata, autoload=True, autoload_with=engine)
 
-    # Update database with averaged file name
-    u = update(model_params_liquid).where(model_params_liquid.c.group_id == int(group_id))
-    u = u.values(eta_0=params['eta_0'], Q_eta=params['Q_eta'], mu0_lubricated=params['mu0_lubricated'],
+    # Add fitting params to db
+    u = insert(model_params_liquid)
+    u = u.values(group_id=group_id, eta_0=params['eta_0'], Q_eta=params['Q_eta'], mu0_lubricated=params['mu0_lubricated'],
                  Q_lubricated=params['Q_lubricated'], mu0_dry=params['mu0_dry'], Q_dry=params['Q_dry'],
                  lambda_1=params['lambda_1'], lambda_2=params['lambda_2'], c=params['c'],
                  k_1=params['k_1'], k_2=params['k_2'], k_3=params['k_3'])
@@ -543,14 +543,14 @@ if __name__ == "__main__":
     average_data(3, plot_results=False, print_experiments=False)
 
 
-    # ### 3. POPULATE THE PARAMETER COLUMNS WITH INITIAL ESTIMATES FOR THAT GROUP
-    # # High speed Omega35
-    # group_id = 1
-    # group_1_params = {'eta_0': 0.13, 'Q_eta': 11930, 'mu0_lubricated': 1.69, 'Q_lubricated': 9141.5,
-    #                       'mu0_dry': 10.94, 'Q_dry': 9368.8, 'lambda_1': 40, 'lambda_2': 1.5, 'c': 0.00847,
-    #                       'k_1': 1.52, 'k_2': 2.67, 'k_3': 4.58}
+    ### 3. POPULATE THE PARAMETER COLUMNS WITH INITIAL ESTIMATES FOR THAT GROUP
+    # High speed Omega35
+    group_id = 1
+    group_1_params = {'eta_0': 0.13, 'Q_eta': 11930, 'mu0_lubricated': 1.69, 'Q_lubricated': 9141.5,
+                      'mu0_dry': 10.94, 'Q_dry': 9368.8, 'lambda_1': 40, 'lambda_2': 1.5, 'c': 0.00847,
+                      'k_1': 1.52, 'k_2': 2.67, 'k_3': 4.58}
 
-    # add_fitting_params_db(group_id=group_id, params=group_1_params)
+    add_fitting_params_db(group_id=group_id, params=group_1_params)
 
     # ### 4. Extract the files and information necessary for plotting and transform into the correct format for manual fitting
     # group_id = 1
