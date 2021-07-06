@@ -306,16 +306,16 @@ def create_sample_datasets():
     experiments_dict[9] = Experiment(9, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
     experiments_dict[10] = Experiment(10, 1, 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 8, 50, 0.43, 25)
 
-    experiments_dict[1].add_output_filename('1_data.csv')
-    experiments_dict[2].add_output_filename('2_data.csv')
-    experiments_dict[3].add_output_filename('3_data.csv')
-    experiments_dict[4].add_output_filename('4_data.csv')
-    experiments_dict[5].add_output_filename('5_data.csv')
-    experiments_dict[6].add_output_filename('6_data.csv')
-    experiments_dict[7].add_output_filename('7_data.csv')
-    experiments_dict[8].add_output_filename('8_data.csv')
-    experiments_dict[9].add_output_filename('9_data.csv')
-    experiments_dict[10].add_output_filename('10_data.csv')
+    experiments_dict[1].add_output_filename('1_output.csv')
+    experiments_dict[2].add_output_filename('2_output.csv')
+    experiments_dict[3].add_output_filename('3_output.csv')
+    experiments_dict[4].add_output_filename('4_output.csv')
+    experiments_dict[5].add_output_filename('5_output.csv')
+    experiments_dict[6].add_output_filename('6_output.csv')
+    experiments_dict[7].add_output_filename('7_output.csv')
+    experiments_dict[8].add_output_filename('8_output.csv')
+    experiments_dict[9].add_output_filename('9_output.csv')
+    experiments_dict[10].add_output_filename('10_output.csv')
 
     return experiments_dict
 
