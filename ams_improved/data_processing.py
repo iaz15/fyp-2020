@@ -21,12 +21,12 @@ import sys
 
 class Experiment:
     def __init__(self, experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
-                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                 coating_material, coating_roughness_Ra, coating_thickness_mm,
                  temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres):
         self.id = experiment_id
 
         self.conditions = ExperimentalConditions(lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
-                                                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                                                 coating_material, coating_roughness_Ra, coating_thickness_mm,
                                                  temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres)
 
     def add_output_filename(self, filename):
@@ -34,7 +34,7 @@ class Experiment:
 
 class ExperimentalConditions:
     def __init__(self, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
-                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                 coating_material, coating_roughness_Ra, coating_thickness_mm,
                  temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres, equiv_solid_thickness_micrometres=None):
 
         self.lubricant = lubricant
