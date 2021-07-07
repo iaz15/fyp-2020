@@ -287,9 +287,23 @@ def add_experiment_database(experiment):
 
     duplicate_count  = con.execute(query).scalar()
 
+    # The updated output filename has experiment id that matches that in the database
+    # e.g. 7_output.csv
+    # A new experiment will always have the experiment_id of last inserted + 1
+    query = select([func.max(experiments.c.experiment_id)])
+    results  = con.execute(query)
+    max_exp_id = results.scalar()
+
+    if max_exp_id is None:
+        new_exp_id = 1 
+    else:
+        new_exp_id = max_exp_id + 1
+
+    output_filename = f'{new_exp_id}_output.csv'
+
     insert_stmt = insert(experiments).\
                     values(condition_id=experiment_condition_id,
-                            filename=experiment.filename,
+                            filename=output_filename,
                             duplicate=duplicate_count)
 
     results = con.execute(insert_stmt)
