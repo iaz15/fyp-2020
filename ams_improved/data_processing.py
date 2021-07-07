@@ -19,6 +19,44 @@ import shutil
 import re
 import sys
 
+class Experiment:
+    def __init__(self, experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres):
+        self.id = experiment_id
+
+        self.conditions = ExperimentalConditions(lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                                                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                                                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres)
+
+    def add_output_filename(self, filename):
+        self.filename = filename
+
+class ExperimentalConditions:
+    def __init__(self, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
+                 coating_material, coating_thickness_mm, coating_roughness_Ra,
+                 temperature_degC, speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres, equiv_solid_thickness_micrometres=None):
+
+        self.lubricant = lubricant
+
+        self.pin_material = pin_material
+        self.pin_roughness_Ra = pin_roughness_Ra
+
+        self.blank_material = blank_material
+        self.blank_roughness_Ra = blank_roughness_Ra
+        self.blank_thickness_mm = blank_thickness_mm
+
+        self.coating_material = coating_material
+        self.coating_thickness_mm = coating_thickness_mm
+        self.coating_roughness_Ra = coating_roughness_Ra
+
+        self.temperature_degC = temperature_degC
+        self.force_N = force_N
+        self.pressure_MPa = pressure_MPa
+        self.speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres = speed_mmpersecond, force_N, pressure_MPa, lubricant_thickness_micrometres
+        self.lubricant_thickness_micrometres = lubricant_thickness_micrometres
+        self.equiv_solid_thickness_micrometres = equiv_solid_thickness_micrometres
+
 
 def sorted_nicely(l):
     """ Sort the given iterable in the way that humans expect."""
