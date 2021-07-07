@@ -296,6 +296,22 @@ def add_experiment_database(experiment):
 
     con.close()
 
+def get_last_experiment_info():
+    engine = create_engine('sqlite:///friction_model.db')
+    con = engine.connect()
+    metadata = sqlalchemy.MetaData()
+
+    # Load the tables
+    experiments = sqlalchemy.Table('experiments', metadata, autoload=True, autoload_with=engine)
+
+    # GET THE LAST EXPERIMENT
+    stmt = select([experiments.c.experiment_id, experiments.c.filename]).order_by(desc(experiments.c.experiment_id))
+    results = con.execute(stmt)
+    db_experiment_id, proc_data_filename = results.first()
+
+    con.close()
+
+    return db_experiment_id, proc_data_filename
 
 def initialise_new_database():
     try:
