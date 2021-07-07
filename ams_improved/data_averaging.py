@@ -1,11 +1,12 @@
 import pandas as pd
-import sqlalchemy as db
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import (Table, Column, Integer, Numeric, String, ForeignKey, Float,
                         PrimaryKeyConstraint, UniqueConstraint, CheckConstraint)
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from sqlalchemy import func
 from sqlalchemy import update
+from pathlib import Path
 import os
 import numpy as np
 import datetime
@@ -53,6 +54,7 @@ def average_datasets(experimental_datasets, exp_numbers=None, trim_resample=True
 
     if len(experimental_datasets) == 1:
         print("Only one dataset used, skipping averaging")
+        print("")
         return 0
 
     # For each of them, make 'time_elapsed_(s)' the index before merging.
@@ -104,7 +106,6 @@ def average_datasets(experimental_datasets, exp_numbers=None, trim_resample=True
     if plot_results == True:
         plt.scatter(averaged_data['sliding_distance_(mm)'], averaged_data[y_axis], label='averaged', s=1)
 
-        print()
         plt.fill_between(averaged_data['sliding_distance_(mm)'],
                          averaged_data[y_axis] - averaged_data['standard_deviations'],
                          averaged_data[y_axis] + averaged_data['standard_deviations'],
@@ -118,7 +119,90 @@ def average_datasets(experimental_datasets, exp_numbers=None, trim_resample=True
         plt.legend(ncol=2)
         plt.show()
 
+    print("")
+
     return averaged_data
 
+def average_data(condition_id, plot_results=True, print_experiments=False):
+    print(f"Averaging using condition id: {condition_id}")
+    results_folder = 'results_friction'
+    averaged_folder = 'averaged_friction'
+
+    if not Path('friction_model.db').is_file():
+        raise Exception("Cannot use average_data function without an existing database")
+
+    engine = create_engine('sqlite:///friction_model.db')
+    con = engine.connect()
+    metadata = sqlalchemy.MetaData()
+
+    # Load the tables
+    experiments = sqlalchemy.Table('experiments', metadata, autoload=True, autoload_with=engine)
+    conditions = sqlalchemy.Table('conditions', metadata, autoload=True, autoload_with=engine)
+    condition_groups = sqlalchemy.Table('condition_groups', metadata, autoload=True, autoload_with=engine)
+    lubricants = sqlalchemy.Table('lubricants', metadata, autoload=True, autoload_with=engine)
+
+    stmt = select([experiments.c.experiment_id, conditions.c.condition_id, experiments.c.filename, conditions.c.temperature_degC, conditions.c.speed_mmpersecond,
+                   conditions.c.force_N, conditions.c.lubricant_thickness_micrometres, experiments.c.select])
+    stmt = stmt.select_from(experiments.join(conditions))
+    stmt = stmt.where(conditions.c.condition_id==condition_id)\
+               .where(experiments.c.select==1)
+
+    result_proxy = con.execute(stmt)
+    results = result_proxy.fetchall()
+
+    if len(results) == 0:
+        print(f"Condition with id {condition_id} does not exist, aborting.")
+        con.close()
+        return None
+
+    df = pd.DataFrame(results)
+    df.columns = result_proxy.keys()
+
+    if print_experiments==True:
+        print(df)
+
+    dfs = []
+    for filename in df.filename:
+        dfs.append(pd.read_csv(os.path.join(results_folder, filename)))
+
+    experiment_num_list = df['experiment_id'].to_list()
+    experiment_num_string = '_'.join([str(num) for num in experiment_num_list])
+
+    print(f"Using experiments: {experiment_num_list}")
+
+    df_averaged_data = average_datasets(dfs, plot_results=plot_results)
+
+    if isinstance(df_averaged_data, int):
+        # If there is only 1 set of data it will return a 0 (an int)
+        con.close()
+        return None
+    else:
+        # Create the folder if it doesn't exist
+        if not os.path.exists(averaged_folder):
+            os.makedirs(averaged_folder)
+        else:
+            pass
+
+        condition_id = df.condition_id.iloc[0]
+
+        # save result to averaged folder
+        averaged_filename = f'C{condition_id}_averaged.csv'
+
+        df_averaged_data.to_csv(os.path.join(averaged_folder, averaged_filename), sep=',', index=False)
+
+        # Update database with averaged file name
+        u = update(conditions).where(conditions.c.condition_id == int(condition_id))
+        u = u.values(avg_filename=averaged_filename)
+        result = con.execute(u)
+
+        con.close()
+
 if __name__ == "__main__":
-    pass
+    average_data(1, plot_results=True, print_experiments=False)
+    average_data(2, plot_results=True, print_experiments=False)
+    average_data(3, plot_results=True, print_experiments=False)
+    average_data(4, plot_results=True, print_experiments=False)
+    average_data(5, plot_results=True, print_experiments=False)
+    average_data(6, plot_results=True, print_experiments=False)
+    average_data(7, plot_results=True, print_experiments=False)
+    average_data(8, plot_results=True, print_experiments=False)
