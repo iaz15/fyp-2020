@@ -493,8 +493,15 @@ def extract_cof_results(matching_files, dfs_dictionary):
                  'delta_x_(m)', 'delta_y_(m)', 'speed_y_(mm_s^-1)',
                  'delta_z_(m)', 'speed_z_(mm_s^-1)'], axis=1, inplace=True)
 
+        # Drop any duplicates in time column potentially due to interpolation
+        df.drop_duplicates(subset='time_elapsed_(s)', inplace=True)
+
         # Remove the first row that has empty cells (and any other ones)
         df.dropna(inplace=True)
+
+        min_time = 0.06
+        df = df[df['time_elapsed_(s)'] > min_time]
+        df['coefficient_of_friction'] = savgol_filter(df['coefficient_of_friction'].values, 51, 2)
 
         dfs_output[exp_id] = df
 
