@@ -15,9 +15,13 @@ from sqlalchemy import insert
 from sqlalchemy import func
 from sqlalchemy import update
 from prettytable import PrettyTable
+from pathlib import Path
+import openpyxl
 import shutil
 import re
 import sys
+
+import database_interaction
 
 class Experiment:
     def __init__(self, experiment_id, lubricant, pin_material, pin_roughness_Ra, blank_material, blank_roughness_Ra, blank_thickness_mm,
@@ -631,20 +635,27 @@ def main():
     # Indicate the relative location of raw data and bins folders
     raw_data_folder = "friction_raw_data"
     bin_folder = "friction_raw_data_bin"
+
+    # Assumption that the experiment number of the raw data files are
+    #   accurate and match that of the excel worksheet.
+    # Test conditions are obtained from the excel worksheet.
+    filename_exp_info = "_friction_model_1.xlsx"
+
+    exp_info_filepath = Path(filename_exp_info).resolve()
     ### USER INPUT ###
 
     startup_text = "Processing Files for Interactive Friction Model."
     print(startup_text)
 
-    # Initialisation for testing
-    source1 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\hidden\force_data_1.csv"
-    source2 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\hidden\position_data_1.csv"
+    # # Initialisation for testing
+    # source1 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\hidden\force_data_1.csv"
+    # source2 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\hidden\position_data_1.csv"
 
-    destination1 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\force_data_1.csv"
-    destination2 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\position_data_1.csv"
+    # destination1 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\force_data_1.csv"
+    # destination2 = r"C:\Users\ismael_zainal\Desktop\repos\fyp-2020\ams_improved\friction_raw_data\position_data_1.csv"
 
-    shutil.copy(source1, destination1)
-    shutil.copy(source2, destination2)
+    # shutil.copy(source1, destination1)
+    # shutil.copy(source2, destination2)
 
     ################## Step 1 - Check if the required folders exist ##################
 
@@ -689,37 +700,103 @@ def main():
     print(f"Time to calculate coefficient of friction: {round((t2-t1), 4)}s\n")
 
     print(f"Output file plot:")
-    for exp_num in dfs_result.keys():
-        print(f"Experimental Result {exp_num}")
+    for experiment_id in dfs_result.keys():
+        print(f"Experimental Result {experiment_id}")
 
         ### PLOTTING
-        plot_scatter(dfs_result[exp_num], 'sliding_distance_(mm)', 'coefficient_of_friction', test_condition=f'Experiment: {exp_num}')
-        plt.show()
+        plot_scatter(dfs_result[experiment_id], 'sliding_distance_(mm)', 'coefficient_of_friction', test_condition=f'Experiment: {experiment_id}')
+        # The showing of the graphs have been disabled for now
+        # plt.show()
 
-    ################## Step 7 - Moving the old files into the bin folder #################
-
-    for file1, file2 in matching_files:
-
-        raw_data_path1 = f"{raw_data_folder}\\{file1}.csv"
-        raw_data_path2 = f"{raw_data_folder}\\{file2}.csv"
-
-        bin_path1 = f"{bin_folder}\\{file1}.csv"
-        bin_path2 = f"{bin_folder}\\{file2}.csv"
-
-        shutil.move(raw_data_path1, bin_path1)
-        shutil.move(raw_data_path2, bin_path2)
-
-    ################## Step 8 - Create results file in results folder (different name from old one) ##################################
+    ################## Step 7 - Create results file in results folder & move processed data to bin directory ##################################
+    # Add experiment to database
+    # Get the new experiment number
+    # Rename the output number
     subdir = 'results_friction'
     print("")
     print("Checking if results folder exists...")
     check_folder_exists(subdir)
     # create the files
-    for exp_num in dfs_result.keys():
-        output_filename = str(exp_num) + "_output.csv"
-        output_filepath = os.path.join(subdir, output_filename)
-        dfs_result[exp_num].to_csv(output_filepath, sep=',', index=False)
 
+    for file1, file2 in matching_files:
+        # Get the experiment id
+        local_experiment_id = int(file1.split("_")[2])
+
+        wb = openpyxl.load_workbook(exp_info_filepath)
+        ws = wb.worksheets[0]
+
+        # Assert all column names are what we expect
+        assert ws['A1'].value == "experiment_id"
+        assert ws['B1'].value == "lubricant_name"
+        assert ws['C1'].value == "pin_material"
+        assert ws['D1'].value == "pin_roughness_Ra"
+        assert ws['E1'].value == "blank_material"
+        assert ws['F1'].value == "blank_roughness_Ra"
+        assert ws['G1'].value == "blank_thickness_mm"
+        assert ws['H1'].value == "coating_material"
+        assert ws['I1'].value == "coating_roughness_Ra"
+        assert ws['J1'].value == "coating_thickness_mm"
+        assert ws['K1'].value == "temperature_degC"
+        assert ws['L1'].value == "speed_mmpersecond"
+        assert ws['M1'].value == "force_N"
+        assert ws['N1'].value == "pressure_MPa"
+        assert ws['O1'].value == "lubricant_thickness_micrometres"
+        assert ws['P1'].value == "processed?"
+
+        local_experiment_row = 0
+        for idx, row in enumerate(ws.iter_rows(), 1):
+            # experiment_id will always be the first row
+            # processed? Y/N will always be the last row
+            if ws[f'A{idx}'].value == local_experiment_id:
+                if ws[f'P{idx}'].value == "y":
+                    raise Exception("Experiment has already been processed according to excel worksheet, please check data filenames or correct the sheet")
+                else:
+                    local_experiment_row = idx
+                    experiment = Experiment(row[0].value, row[1].value, row[2].value, row[3].value,
+                               row[4].value, row[5].value, row[6].value, row[7].value,
+                               row[8].value, row[9].value, row[10].value, row[11].value,
+                               row[12].value, row[13].value, row[14].value)
+
+                    try:
+                        ws[f'P{local_experiment_row}'].value = "y"
+                        wb.save(exp_info_filepath)
+                    except PermissionError as msg:
+                        raise Exception(f"PermissionsError, please ensure that the file {exp_info_filepath} is not open")
+
+                    database_interaction.add_experiment_database(experiment)
+
+                    # Get the output filename (according to database)
+                    db_experiment_id, proc_data_filename = database_interaction.get_last_experiment_info()
+
+                    break
+
+        output_filepath = Path(subdir).joinpath(proc_data_filename)
+
+        dfs_result[local_experiment_id].to_csv(output_filepath, sep=',', index=False)
+
+        # Move the processed files to the raw data bin & rename according to db numbering
+        raw_data_path1 = f"{raw_data_folder}\\{file1}.csv"
+        raw_data_path2 = f"{raw_data_folder}\\{file2}.csv"
+
+        # Assert that the filename is as expected so we can use an _ to separate the number
+        # This is the filename without the csv
+        filename_pattern = '(force|position)_data_([0-9]+)'
+        filename_matcher = re.compile(filename_pattern)
+
+        matcher1 = filename_matcher.match(file1)
+        matcher2 = filename_matcher.match(file2)
+
+        assert matcher1 is not None
+        assert matcher2 is not None
+
+        new_filename1 = f"{matcher1.group(1)}_data_{db_experiment_id}"
+        new_filename2 = f"{matcher2.group(1)}_data_{db_experiment_id}"
+
+        bin_path1 = f"{bin_folder}\\{new_filename1}.csv"
+        bin_path2 = f"{bin_folder}\\{new_filename2}.csv"
+
+        shutil.move(raw_data_path1, bin_path1)
+        shutil.move(raw_data_path2, bin_path2)
 
 if __name__ == "__main__":
     # Setup Code Runner to allow user input:
@@ -729,5 +806,19 @@ if __name__ == "__main__":
 
     # For plotting:
     # https://matplotlib.org/gallery/index.html#our-favorite-recipes
+
+    # try:
+    #     # remove existing database
+    #     os.remove('friction_model.db')
+    # except:
+    #     raise Exception("failed to remove db")
+
+    # create the database if it doesn't exist
+    db_filename = "friction_model.db"
+    if not Path(db_filename).exists():
+        print("No database detected, initialising a new one")
+        database_interaction.create_database()
+    else:
+        print("Existing database detected")
 
     main()
