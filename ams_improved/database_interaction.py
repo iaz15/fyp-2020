@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, MetaData, DateTime
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import (Table, Column, Integer, Numeric, String, ForeignKey, Boolean, Float)
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from sqlalchemy import select, insert, update
 
 from rename_files import Experiment
@@ -360,14 +360,14 @@ def create_sample_datasets():
     experiments_dict = {}
     experiments_dict[1] = Experiment(1, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
     experiments_dict[2] = Experiment(2, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
-    experiments_dict[3] = Experiment(3, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
-    experiments_dict[4] = Experiment(4, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
-    experiments_dict[5] = Experiment(5, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
-    experiments_dict[6] = Experiment(6, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
+    experiments_dict[3] = Experiment(3, 'F605N', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 50, 5, 0.34, 25)
+    experiments_dict[4] = Experiment(4, 'F605N', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
+    experiments_dict[5] = Experiment(5, 'F420N', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
+    experiments_dict[6] = Experiment(6, 'F420N', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 100, 5, 0.34, 25)
     experiments_dict[7] = Experiment(7, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
     experiments_dict[8] = Experiment(8, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
-    experiments_dict[9] = Experiment(9, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
-    experiments_dict[10] = Experiment(10, 'F555', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 8, 50, 0.43, 25)
+    experiments_dict[9] = Experiment(9, 'F557', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 200, 50, 5, 0.41, 25)
+    experiments_dict[10] = Experiment(10, 'F605N', 'P20', 0.8, 'AA7075', 0.5, 5, 'None', 0, 0, 250, 8, 50, 0.43, 25)
 
     experiments_dict[1].add_output_filename('1_output.csv')
     experiments_dict[2].add_output_filename('2_output.csv')
@@ -581,7 +581,7 @@ if __name__ == "__main__":
     condition_id = 1
     average_data(1, plot_results=False, print_experiments=False)
     average_data(2, plot_results=False, print_experiments=False)
-    average_data(3, plot_results=False, print_experiments=False)
+    average_data(5, plot_results=False, print_experiments=False)
 
     ### 3. POPULATE THE PARAMETER COLUMNS WITH INITIAL ESTIMATES FOR THAT GROUP
     # High speed_mmpersecond Omega35
