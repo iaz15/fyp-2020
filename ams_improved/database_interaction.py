@@ -47,11 +47,11 @@ def create_database():
     experiments = Table('experiments', metadata,
         Column('experiment_id', Integer(), primary_key=True, autoincrement=True),
         Column('condition_id', Integer(), ForeignKey('conditions.condition_id')),
-        Column('filename', String(100)),
+        Column('filename', String(255)),
         Column('duplicate', Integer()),
         Column('created_on', DateTime(timezone=True), server_default=func.now()),
         Column('select', Boolean(), server_default='1'),
-        Column('comments', String(100))
+        Column('comments', String(255))
     )
 
     conditions = Table('conditions', metadata,
@@ -63,7 +63,7 @@ def create_database():
         Column('speed_mmpersecond', Integer()),
         Column('lubricant_thickness_micrometres', Integer()),
         Column('equiv_solid_thickness_micrometres', Float(), index=True),
-        Column('avg_filename', String(100)),
+        Column('avg_filename', String(255)),
     )
 
     condition_groups = Table('condition_groups', metadata,
